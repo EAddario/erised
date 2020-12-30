@@ -21,6 +21,14 @@ func httpStatusCode(code string) int {
 	switch code {
 	case "OK", "200" : return 200
 
+	case "MultipleChoices", "300": return 300
+	case "MovedPermanently", "301": return 301
+	case "Found", "302": return 302
+	case "SeeOther", "303": return 303
+	case "UseProxy", "305": return 305
+	case "TemporaryRedirect", "307": return 307
+	case "PermanentRedirect", "308": return 308
+
 	case "BadRequest", "400": return 400
 	case "Unauthorized", "401": return 401
 	case "PaymentRequired", "402": return 402

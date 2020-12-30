@@ -19,7 +19,11 @@ func (s *server) handleLanding() http.HandlerFunc {
 			res.Header().Set("Transfer-Encoding", te)
 		}
 
-		res.WriteHeader(httpStatusCode(req.Header.Get("X-Erised-Status-Code")))
+		sc := httpStatusCode(req.Header.Get("X-Erised-Status-Code"))
+		if sc >= 300 && sc < 310 {
+			res.Header().Set("Location", req.Header.Get("X-Erised-Location"))
+		}
+		res.WriteHeader(sc)
 
 		data := req.Header.Get("X-Erised-Data")
 

@@ -14,12 +14,21 @@ Response behaviour is controlled via custom http headers:
 |X-Erised-Data|Returns the value **as is** in the response body|
 |X-Erised-Content-Type|Returns the value **as is** in the *Content-Type* response header|
 |X-Erised-Status-Code|Used to set the *http status code* value|
+|X-Erised-Location|Returns the value **as is** of a new URL or path when 300 ≤ *X-Erised-Status-Code* < 310
 
-By design, no validation is performed on *X-Erised-Data* or *X-Erised-Content-Type*. Values are used **as is**
+By design, no validation is performed on *X-Erised-Data*, *X-Erised-Content-Type* or *X-Erised-Location*. Values are returned **as is**
 
 Valid *X-Erised-Status-Code* values are as follows:
 ```text
 OK or 200
+
+MultipleChoices or 300
+MovedPermanently or 301
+Found or 302
+SeeOther or 303
+UseProxy or 305
+TemporaryRedirect or 307
+PermanentRedirect or 308
 
 BadRequest or 400
 Unauthorized or 401
@@ -146,7 +155,8 @@ Server refuses to brew coffee because it is, permanently, a teapot.
 ```
 
 # Release History
-* v0.0.1 Initial release
+* WIP (not yet released) - Add HTTP redirection status codes (300's)
+* v0.0.1 - Initial release
 
 # Known Issues
 **erised** is full of bugs and "_...men have wasted away before it, not knowing if what they have seen is real, or even possible..._" so use it with caution for it gives no knowledge or truth.
