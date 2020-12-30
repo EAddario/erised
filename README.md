@@ -145,6 +145,12 @@ Server refuses to brew coffee because it is, permanently, a teapot.
 # Release History
 * 0.0.1 Initial release
 
+# Known Issues
+**erised** is full of bugs and "_men have wasted away before it, not knowing if what they have seen is real, or even possible_" so use it with caution for it gives no knowledge or truth. Of all its deficiencies, the most notable are:
+* Server parameters are hardcoded
+* Server does not shutdown gracefully. To stop, process must be terminated
+
+I may or may not address any of this in a future release. Caveat Emptor
 # Motivation
 When developing and testing REST based API clients, sooner or later I'd come across situations where I needed a quick and easy way to dynamically test endpoint's responses under different scenarios. Although there are many excellent frameworks and mock servers available, the time and effort required to configure them is sometimes not justified, specially if the application under test provides 10's or 100's of paths, so after some brief and unsuccessful googling I decided to create my own.
 
