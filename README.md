@@ -117,7 +117,7 @@ curl -w '\n' -v -H "X-Erised-Content-Type:text/json; charset=utf-8" -H "X-Erised
 [{Hello:World}]
 * Closing connection 0
 ```
-#### Request returning *text* in the response's body, an arbitrary *application/teapot* in the header's Content-Type and [*418 I'm a teapot*](https://en.wikipedia.org/wiki/Hyper_Text_Coffee_Pot_Control_Protocol) in the header's Status Code
+#### Request returning *text* in the response's body, an arbitrary *application/teapot* in the header's Content-Type and [*418 I'm a teapot*](https://save418.com/) in the header's Status Code
 ```
 curl -w '\n' -v -H "X-Erised-Status-Code:Teapot" -H "X-Erised-Content-Type:application/teapot; charset=utf-8" -H "X-Erised-Data:Server refuses to brew coffee because it is, permanently, a teapot." http://localhost:8080
 ```
