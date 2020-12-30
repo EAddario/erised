@@ -3,7 +3,6 @@
 A simple **http server** to test arbitrary responses.
 
 # Usage
-
 Upon executing **erised** it will listen on port **8080** for incoming http requests.
 
 HTTP verbs (e.g. GET, POST, PATCH, etc.), URL Paths and query strings are **ignored**. 
@@ -16,7 +15,7 @@ Response behaviour is controlled via custom http headers:
 |X-Erised-Content-Type|Returns the value **as is** in the *Content-Type* response header|
 |X-Erised-Status-Code|Used to set the *http status code* value|
 
-By design, no validation is performed on *X-Erised-Data* or *X-Erised-Content-Type*.
+By design, no validation is performed on *X-Erised-Data* or *X-Erised-Content-Type*. Values are used **as is**
 
 Valid *X-Erised-Status-Code* values are as follows:
 ```text
@@ -48,7 +47,7 @@ NetworkAuthenticationRequired or 511
 Any other value will resolve to 200 (OK)
 
 # Examples
-#### Simple request returning nothing in the response's body:
+### Simple request returning nothing in the response's body:
 ```
 curl -w '\n' -v http://localhost:8080
 ```
@@ -70,7 +69,8 @@ curl -w '\n' -v http://localhost:8080
 
 * Closing connection 0
 ```
-#### Request returning *Hello World* in the response's body:
+
+### Request returning *Hello World* in the response's body:
 ```
 curl -w '\n' -v -H "X-Erised-Data:Hello World" http://localhost:8080
 ```
@@ -93,7 +93,8 @@ curl -w '\n' -v -H "X-Erised-Data:Hello World" http://localhost:8080
 Hello World
 * Closing connection 0
 ```
-#### Request returning *[{"Hello":"World"}]* in the response's body and *text/json* in the header's Content-Type
+
+### Request returning *[{"Hello":"World"}]* in the response's body and *text/json* in the header's Content-Type
 ```
 curl -w '\n' -v -H "X-Erised-Content-Type:text/json; charset=utf-8" -H "X-Erised-Data:[{"Hello":"World"}]" http://localhost:8080
 ```
@@ -117,7 +118,8 @@ curl -w '\n' -v -H "X-Erised-Content-Type:text/json; charset=utf-8" -H "X-Erised
 [{Hello:World}]
 * Closing connection 0
 ```
-#### Request returning *text* in the response's body, an arbitrary *application/teapot* in the header's Content-Type and [*418 I'm a teapot*](https://save418.com/) in the header's Status Code
+
+### Request returning *text* in the response's body, an arbitrary *application/teapot* in the header's Content-Type and [*418 I'm a teapot*](https://save418.com/) in the header's Status Code
 ```
 curl -w '\n' -v -H "X-Erised-Status-Code:Teapot" -H "X-Erised-Content-Type:application/teapot; charset=utf-8" -H "X-Erised-Data:Server refuses to brew coffee because it is, permanently, a teapot." http://localhost:8080
 ```
@@ -142,26 +144,35 @@ curl -w '\n' -v -H "X-Erised-Status-Code:Teapot" -H "X-Erised-Content-Type:appli
 Server refuses to brew coffee because it is, permanently, a teapot.
 * Closing connection 0
 ```
+
 # Release History
-* 0.0.1 Initial release
+* v0.0.1 Initial release
 
 # Known Issues
-**erised** is full of bugs and "_men have wasted away before it, not knowing if what they have seen is real, or even possible_" so use it with caution for it gives no knowledge or truth. Of all its deficiencies, the most notable are:
-* There are not tests yet
+**erised** is full of bugs and "_...men have wasted away before it, not knowing if what they have seen is real, or even possible..._" so use it with caution for it gives no knowledge or truth.
+
+Of all its deficiencies, the most notable are:
+* There are not tests (yet)
+* **erised** offers no help
 * Server parameters are hardcoded
 * Server does not shutdown gracefully. To stop, process must be terminated
+* https protocol is not supported
+* **erised** does not scale well
 
 I may or may not address any of this in a future release. Caveat Emptor
+
 # Motivation
 When developing and testing REST based API clients, sooner or later I'd come across situations where I needed a quick and easy way to dynamically test endpoint's responses under different scenarios. Although there are many excellent frameworks and mock servers available, the time and effort required to configure them is sometimes not justified, specially if the application under test provides 10's or 100's of paths, so after some brief and unsuccessful googling I decided to create my own.
 
-The typical use case is to get a response to an arbitrary http request where the content of the body has a predetermined value and your ability configure the server is limited or non-existent.
+**erised** was inspired somewhat by [Kenneth Reitz's](https://kennethreitz.org/) HTTP Request & Response Service [httpbin.io](https://httpbin.org/) and it may offer similar functionality in future releases.
 
-Imagine you're developing some client for [api.chucknorris.io](https://api.chucknorris.io/) and want to test the **jokes/random** path. You could certainly make live calls against the server:
+The typical use case is to get a response to an arbitrary http request where the content of the body has a predetermined value and your ability to control the server's behaviour is limited or non-existent.
+
+Imagine you're developing some client for [api.chucknorris.io](https://api.chucknorris.io/) and want to test the **/jokes/random** path. You could certainly make live calls against the server:
 ```sh
 curl -w '\n' -v -k https://api.chucknorris.io/jokes/random
 ```
-(responses edited for clarity)
+(response edited for clarity)
 ```sh
 *   Trying 104.31.94.71...
 * TCP_NODELAY set
@@ -179,6 +190,7 @@ curl -w '\n' -v -k https://api.chucknorris.io/jokes/random
 {"categories":[],"created_at":"2020-01-05 13:42:18.823766","icon_url":"https://assets.chucknorris.host/img/avatar/chuck-norris.png","id":"CfW0ccNFTpeq_v1r13IjTQ","updated_at":"2020-01-05 13:42:18.823766","url":"https://api.chucknorris.io/jokes/CfW0ccNFTpeq_v1r13IjTQ","value":"The lord giveth and Chuck Norris taketh away"}
 * Closing connection 0
 ```
+
 **Or**, you could use **erised** like this:
 ```sh
 curl -w '\n' -v \
@@ -208,7 +220,8 @@ http://localhost:8080/jokes/random
 {"categories":[],"created_at":"2020-01-05 13:42:26.766831","icon_url":"https://assets.chucknorris.host/img/avatar/chuck-norris.png","id":"CfW0ccNFTpeq_v1r13IjTQ","updated_at":"2020-01-05 13:42:26.766831","url":"https://api.chucknorris.io/jokes/CfW0ccNFTpeq_v1r13IjTQ","value":"The lord giveth and Chuck Norris taketh away"}
 * Closing connection 0
 ```
-and also test some common failures like,
+
+**and** also to test some common failures like,
 ```sh
 curl -w '\n' -v \
 -H "X-Erised-Status-Code:NotFound" \
