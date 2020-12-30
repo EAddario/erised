@@ -147,6 +147,7 @@ Server refuses to brew coffee because it is, permanently, a teapot.
 
 # Known Issues
 **erised** is full of bugs and "_men have wasted away before it, not knowing if what they have seen is real, or even possible_" so use it with caution for it gives no knowledge or truth. Of all its deficiencies, the most notable are:
+* There are not tests yet
 * Server parameters are hardcoded
 * Server does not shutdown gracefully. To stop, process must be terminated
 
