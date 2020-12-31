@@ -84,4 +84,3 @@ func (s *server) respond(res http.ResponseWriter, encoding int,  data interface{
 		}
 	}
 }
-
