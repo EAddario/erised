@@ -3,9 +3,24 @@
 A simple **http server** to test arbitrary responses.
 
 # Usage
-Upon executing **erised** it will listen on port **8080** for incoming http requests.
+`erised [options]`
+```text
+Parameters:
+  -idle int
+    	maximum time in seconds to wait for the next request when keep-alive is enabled (default 120)
+  -port int
+    	port to listen (default 8080)
+  -read int
+    	maximum duration in seconds for reading the entire request (default 5)
+  -write int
+    	maximum duration in seconds before timing out response writes (default 10)
+```
 
-HTTP verbs (e.g. GET, POST, PATCH, etc.), URL Paths and query strings are **ignored**. 
+For help type **erised -h**
+
+Upon executing **erised** with no parameters it will listen on port **8080** for incoming http requests. 
+
+HTTP verbs (e.g. GET, POST, PATCH, etc.), URL Paths, query strings and body are **ignored**. 
 
 Response behaviour is controlled via custom http headers:
 
