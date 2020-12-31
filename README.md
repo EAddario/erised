@@ -155,7 +155,7 @@ Server refuses to brew coffee because it is, permanently, a teapot.
 ```
 
 # Release History
-* WIP (not yet released) - Add HTTP redirection status codes (300's)
+* v0.0.2 - Add HTTP redirection status codes (300's), startup configuration parameters and request's logging
 * v0.0.1 - Initial release
 
 # Known Issues
@@ -163,8 +163,8 @@ Server refuses to brew coffee because it is, permanently, a teapot.
 
 Of all its deficiencies, the most notable are:
 * There are not tests (yet)
-* **erised** offers no help
-* Server parameters are hardcoded
+* ~~**erised** offers no help~~
+* ~~Server parameters are hardcoded~~
 * Server does not shutdown gracefully. To stop, process must be terminated
 * https protocol is not supported
 * **erised** does not scale well
