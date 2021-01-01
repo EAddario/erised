@@ -30,6 +30,7 @@ Response behaviour is controlled via custom http headers:
 |X-Erised-Content-Type|Returns the value **as is** in the *Content-Type* response header|
 |X-Erised-Status-Code|Used to set the *http status code* value|
 |X-Erised-Location|Returns the value **as is** of a new URL or path when 300 ≤ *X-Erised-Status-Code* < 310
+|X-Erised-Response-Delay|Number of milliseconds to wait before sending response back to client
 
 By design, no validation is performed on *X-Erised-Data*, *X-Erised-Content-Type* or *X-Erised-Location*. Values are returned **as is**
 

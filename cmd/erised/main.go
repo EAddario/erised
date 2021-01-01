@@ -12,8 +12,8 @@ import (
 const version = "v0.0.3"
 
 type server struct {
-	mux  *http.ServeMux
-	cfg  *http.Server
+	mux *http.ServeMux
+	cfg *http.Server
 }
 
 func newServer(port, read, write, idle int) *server {
@@ -36,16 +36,22 @@ func newServer(port, read, write, idle int) *server {
 
 func setupFlags(f *flag.FlagSet) {
 	f.Usage = func() {
-		fmt.Println("Simple http server to test arbitrary responses", version)
+		fmt.Println("Simple http server to test arbitrary responses (" + version + ")")
 		fmt.Println("Usage examples at https://github.com/EAddario/erised")
 		fmt.Println("\nerised [options]")
 		fmt.Println("\nParameters:")
 		flag.PrintDefaults()
+		fmt.Println("\nHTTP Headers:")
+		fmt.Println("X-Erised-Data:\t\t\tReturns the value in the response body")
+		fmt.Println("X-Erised-Content-Type:\t\tReturns the value in the Content-Type response header")
+		fmt.Println("X-Erised-Status-Code:\t\tUsed to set the http status code value")
+		fmt.Println("X-Erised-Location:\t\tReturns the value of a new URL or path when 300 ≤ X-Erised-Status-Code < 310")
+		fmt.Println("X-Erised-Response-Delay:\tNumber of milliseconds to wait before sending response back to client")
 		fmt.Println()
 	}
 }
 
-func main()  {
+func main() {
 	pt := flag.Int("port", 8080, "port to listen")
 	rt := flag.Int("read", 5, "maximum duration in seconds for reading the entire request")
 	wt := flag.Int("write", 10, "maximum duration in seconds before timing out response writes")
