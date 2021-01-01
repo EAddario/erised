@@ -20,9 +20,15 @@ For help type **erised -h**
 
 Upon executing **erised** with no parameters it will listen on port **8080** for incoming http requests. 
 
-HTTP verbs (e.g. GET, POST, PATCH, etc.), URL Paths, query strings and body are **ignored**. 
+HTTP methods (e.g. GET, POST, PATCH, etc.), query strings and body are **ignored**. URL Paths are also ignored, except for:
 
-Response behaviour is controlled via custom http headers:
+|Name|Purpose|
+|--|--|
+|erised/headers|Returns all the request headers|
+|erised/ip|Returns the client IP|
+|erised/info|Returns miscellaneous information|
+
+Response behaviour is controlled via custom headers in the http request:
 
 |Name|Purpose|
 |--|--|
@@ -171,6 +177,7 @@ Server refuses to brew coffee because it is, permanently, a teapot.
 ```
 
 # Release History
+* v0.0.3 - Add headers, ip and info paths. Add delayed responses
 * v0.0.2 - Add HTTP redirection status codes (300's), startup configuration parameters and request's logging
 * v0.0.1 - Initial release
 
