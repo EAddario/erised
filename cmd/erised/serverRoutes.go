@@ -9,6 +9,7 @@ import (
 func (s *server) routes() {
 	s.mux.HandleFunc("/", s.handleLanding())
 	s.mux.HandleFunc("/erised/headers", s.handleHeaders())
+	s.mux.HandleFunc("/erised/ip", s.handleIP())
 }
 
 func (s *server) handleLanding() http.HandlerFunc {
@@ -49,5 +50,20 @@ func (s *server) handleHeaders() http.HandlerFunc {
 		} else {
 			log.Fatal(err)
 		}
+	}
+}
+
+func (s *server) handleIP() http.HandlerFunc {
+	return func(res http.ResponseWriter, req *http.Request) {
+		log.Printf("%s from %s - %s %s%s",
+			req.Proto, req.RemoteAddr, req.Method, req.Host, req.RequestURI)
+
+		res.Header().Set("Content-Type", "application/json; charset=utf-8")
+
+		data := "{"
+		data += "\"Client IP\":\"" + req.RemoteAddr + "\""
+		data += "}"
+
+		s.respond(res, encodingTEXT, data)
 	}
 }
