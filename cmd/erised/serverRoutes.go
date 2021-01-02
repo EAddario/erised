@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -52,11 +53,22 @@ func (s *server) handleHeaders() http.HandlerFunc {
 
 		res.Header().Set("Content-Type", "application/json; charset=utf-8")
 
-		if rh, err := json.Marshal(req.Header); err == nil {
-			s.respond(res, encodingTEXT, 0, string(rh))
-		} else {
-			log.Fatal(err)
+		data := "{"
+		for k, v := range req.Header {
+			if k == "X-Erised-Data" {
+				if json.Valid([]byte(v[0])) {
+					data += "\"" + k + "\":" + v[0] + ","
+				} else {
+					data += "\"" + k + "\":\"" + strings.ReplaceAll(v[0], `"`, `\"`) + "\","
+				}
+			} else {
+				data += "\"" + k + "\":\"" + v[0] + "\","
+			}
 		}
+		data += "\"Host\":\"" + req.Host + "\""
+		data += "}"
+
+		s.respond(res, encodingTEXT, 0, data)
 	}
 }
 
