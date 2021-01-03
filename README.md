@@ -76,6 +76,115 @@ NetworkAuthenticationRequired or 511
 ```
 Any other value will resolve to 200 (OK)
 
+# Release History
+* v0.2.1 - Add gzip compression, improve erised/headers json handling
+* v0.0.3 - Add erised/headers, erised/ip and erised/info paths. Add delayed responses
+* v0.0.2 - Add HTTP redirection status codes (300's), startup configuration parameters and request's logging
+* v0.0.1 - Initial release
+
+# Known Issues
+**erised** is full of bugs and "_...men have wasted away before it, not knowing if what they have seen is real, or even possible..._" so use it with caution for it gives no knowledge or truth.
+
+Of all its deficiencies, the most notable are:
+* There are not tests (yet)
+* Server does not shutdown gracefully. To stop, process must be terminated
+* https protocol is not supported
+* **erised** does not scale well
+
+I may or may not address any of this in a future release. Caveat Emptor
+
+# Motivation
+When developing and testing REST based API clients, sooner or later I'd come across situations where I needed a quick and easy way to dynamically test endpoint's responses under different scenarios. Although there are many excellent frameworks and mock servers available, the time and effort required to configure them is sometimes not justified, specially if the application under test provides 10's or 100's of paths, so after some brief and unsuccessful googling I decided to create my own.
+
+**erised** was inspired somewhat by [Kenneth Reitz's](https://kennethreitz.org/) HTTP Request & Response Service [httpbin.io](https://httpbin.org/) and it may offer similar functionality in future releases.
+
+The typical use case is to get a response to an arbitrary http request where the content of the body has a predetermined value and your ability to control the server's behaviour is limited or non-existent.
+
+Imagine you're developing some client for [api.chucknorris.io](https://api.chucknorris.io/) and want to test the **/jokes/random** path. You could certainly make live calls against the server:
+```sh
+curl -w '\n' -v -k https://api.chucknorris.io/jokes/random
+```
+(response edited for clarity)
+```sh
+*   Trying 104.31.94.71...
+* TCP_NODELAY set
+* Connected to api.chucknorris.io (104.31.94.71) port 443 (#0)
+> GET /jokes/random HTTP/2
+> Host: api.chucknorris.io
+> User-Agent: curl/7.64.1
+> Accept: */*
+>
+< HTTP/2 200
+< date: Wed, 30 Dec 2020 00:21:14 GMT
+< content-type: application/json;charset=UTF-8
+<
+* Connection #0 to host api.chucknorris.io left intact
+{"categories":[],"created_at":"2020-01-05 13:42:18.823766","icon_url":"https://assets.chucknorris.host/img/avatar/chuck-norris.png","id":"CfW0ccNFTpeq_v1r13IjTQ","updated_at":"2020-01-05 13:42:18.823766","url":"https://api.chucknorris.io/jokes/CfW0ccNFTpeq_v1r13IjTQ","value":"The lord giveth and Chuck Norris taketh away"}
+* Closing connection 0
+```
+
+**Or**, better yet, you could use **erised** like this:
+```sh
+curl -w '\n' -v \
+-H "X-Erised-Status-Code:OK" \
+-H "X-Erised-Content-Type:json" \
+-H "X-Erised-Data:{\"categories\":[],\"created_at\":\"2020-01-05 13:42:26.766831\",\"icon_url\":\"https://assets.chucknorris.host/img/avatar/chuck-norris.png\",\"id\":\"CfW0ccNFTpeq_v1r13IjTQ\",\"updated_at\":\"2020-01-05 13:42:26.766831\",\"url\":\"https://api.chucknorris.io/jokes/CfW0ccNFTpeq_v1r13IjTQ\",\"value\":\"The lord giveth and Chuck Norris taketh away\"}" \
+http://localhost:8080/jokes/random
+```
+```sh
+*   Trying ::1...
+* TCP_NODELAY set
+* Connected to localhost (::1) port 8080 (#0)
+> GET /jokes/random HTTP/1.1
+> Host: localhost:8080
+> User-Agent: curl/7.64.1
+> Accept: */*
+> X-Erised-Status-Code:OK
+> X-Erised-Content-Type:json
+> X-Erised-Data:{"categories":[],"created_at":"2020-01-05 13:42:26.766831","icon_url":"https://assets.chucknorris.host/img/avatar/chuck-norris.png","id":"CfW0ccNFTpeq_v1r13IjTQ","updated_at":"2020-01-05 13:42:26.766831","url":"https://api.chucknorris.io/jokes/CfW0ccNFTpeq_v1r13IjTQ","value":"The lord giveth and Chuck Norris taketh away"}
+>
+< HTTP/1.1 200 OK
+< Content-Encoding: identity
+< Content-Type: application/json
+< Date: Wed, 30 Dec 2020 01:13:54 GMT
+< Content-Length: 323
+<
+* Connection #0 to host localhost left intact
+{"categories":[],"created_at":"2020-01-05 13:42:26.766831","icon_url":"https://assets.chucknorris.host/img/avatar/chuck-norris.png","id":"CfW0ccNFTpeq_v1r13IjTQ","updated_at":"2020-01-05 13:42:26.766831","url":"https://api.chucknorris.io/jokes/CfW0ccNFTpeq_v1r13IjTQ","value":"The lord giveth and Chuck Norris taketh away"}
+* Closing connection 0
+```
+
+**and** also to test some common failures like,
+```sh
+curl -w '\n' -v \
+-H "X-Erised-Status-Code:NotFound" \
+-H "X-Erised-Content-Type:json" \
+-H "X-Erised-Data:{\"timestamp\":\"2020-12-30T11:21:32.793Z\",\"status\":404,\"error\":\"Not Found\",\"message\":\"Chuck Norris knows everything there is to know - Except where this page is.\",\"path\":\"/jokes/random\"}" \
+http://localhost:8080/jokes/random
+```
+```sh
+*   Trying ::1...
+* TCP_NODELAY set
+* Connected to localhost (::1) port 8080 (#0)
+> GET /jokes/random HTTP/1.1
+> Host: localhost:8080
+> User-Agent: curl/7.64.1
+> Accept: */*
+> X-Erised-Status-Code:NotFound
+> X-Erised-Content-Type:json
+> X-Erised-Data:{"timestamp":"2020-12-30T11:21:32.793Z","status":404,"error":"Not Found","message":"Chuck Norris knows everything there is to know - Except where this page is.","path":"/jokes/random"}
+>
+< HTTP/1.1 404 Not Found
+< Content-Encoding: identity
+< Content-Type: application/json
+< Date: Wed, 30 Dec 2020 11:25:21 GMT
+< Content-Length: 184
+<
+* Connection #0 to host localhost left intact
+{"timestamp":"2020-12-30T11:21:32.793Z","status":404,"error":"Not Found","message":"Chuck Norris knows everything there is to know - Except where this page is.","path":"/jokes/random"}
+* Closing connection 0
+```
+
 # Examples
 ### Simple request returning nothing in the response's body:
 ```
@@ -175,115 +284,5 @@ curl -w '\n' -v -H "X-Erised-Status-Code:Teapot" -H "X-Erised-Data:Server refuse
 <
 * Connection #0 to host localhost left intact
 Server refuses to brew coffee because it is, permanently, a teapot.
-* Closing connection 0
-```
-
-# Release History
-* v0.0.3 - Add erised/headers, erised/ip and erised/info paths. Add delayed responses
-* v0.0.2 - Add HTTP redirection status codes (300's), startup configuration parameters and request's logging
-* v0.0.1 - Initial release
-
-# Known Issues
-**erised** is full of bugs and "_...men have wasted away before it, not knowing if what they have seen is real, or even possible..._" so use it with caution for it gives no knowledge or truth.
-
-Of all its deficiencies, the most notable are:
-* There are not tests (yet)
-* ~~**erised** offers no help~~
-* ~~Server parameters are hardcoded~~
-* Server does not shutdown gracefully. To stop, process must be terminated
-* https protocol is not supported
-* **erised** does not scale well
-
-I may or may not address any of this in a future release. Caveat Emptor
-
-# Motivation
-When developing and testing REST based API clients, sooner or later I'd come across situations where I needed a quick and easy way to dynamically test endpoint's responses under different scenarios. Although there are many excellent frameworks and mock servers available, the time and effort required to configure them is sometimes not justified, specially if the application under test provides 10's or 100's of paths, so after some brief and unsuccessful googling I decided to create my own.
-
-**erised** was inspired somewhat by [Kenneth Reitz's](https://kennethreitz.org/) HTTP Request & Response Service [httpbin.io](https://httpbin.org/) and it may offer similar functionality in future releases.
-
-The typical use case is to get a response to an arbitrary http request where the content of the body has a predetermined value and your ability to control the server's behaviour is limited or non-existent.
-
-Imagine you're developing some client for [api.chucknorris.io](https://api.chucknorris.io/) and want to test the **/jokes/random** path. You could certainly make live calls against the server:
-```sh
-curl -w '\n' -v -k https://api.chucknorris.io/jokes/random
-```
-(response edited for clarity)
-```sh
-*   Trying 104.31.94.71...
-* TCP_NODELAY set
-* Connected to api.chucknorris.io (104.31.94.71) port 443 (#0)
-> GET /jokes/random HTTP/2
-> Host: api.chucknorris.io
-> User-Agent: curl/7.64.1
-> Accept: */*
->
-< HTTP/2 200
-< date: Wed, 30 Dec 2020 00:21:14 GMT
-< content-type: application/json;charset=UTF-8
-<
-* Connection #0 to host api.chucknorris.io left intact
-{"categories":[],"created_at":"2020-01-05 13:42:18.823766","icon_url":"https://assets.chucknorris.host/img/avatar/chuck-norris.png","id":"CfW0ccNFTpeq_v1r13IjTQ","updated_at":"2020-01-05 13:42:18.823766","url":"https://api.chucknorris.io/jokes/CfW0ccNFTpeq_v1r13IjTQ","value":"The lord giveth and Chuck Norris taketh away"}
-* Closing connection 0
-```
-
-**Or**, better yet, you could use **erised** like this:
-```sh
-curl -w '\n' -v \
--H "X-Erised-Status-Code:OK" \
--H "X-Erised-Content-Type:json" \
--H "X-Erised-Data:{\"categories\":[],\"created_at\":\"2020-01-05 13:42:26.766831\",\"icon_url\":\"https://assets.chucknorris.host/img/avatar/chuck-norris.png\",\"id\":\"CfW0ccNFTpeq_v1r13IjTQ\",\"updated_at\":\"2020-01-05 13:42:26.766831\",\"url\":\"https://api.chucknorris.io/jokes/CfW0ccNFTpeq_v1r13IjTQ\",\"value\":\"The lord giveth and Chuck Norris taketh away\"}" \
-http://localhost:8080/jokes/random
-```
-```sh
-*   Trying ::1...
-* TCP_NODELAY set
-* Connected to localhost (::1) port 8080 (#0)
-> GET /jokes/random HTTP/1.1
-> Host: localhost:8080
-> User-Agent: curl/7.64.1
-> Accept: */*
-> X-Erised-Status-Code:OK
-> X-Erised-Content-Type:json
-> X-Erised-Data:{"categories":[],"created_at":"2020-01-05 13:42:26.766831","icon_url":"https://assets.chucknorris.host/img/avatar/chuck-norris.png","id":"CfW0ccNFTpeq_v1r13IjTQ","updated_at":"2020-01-05 13:42:26.766831","url":"https://api.chucknorris.io/jokes/CfW0ccNFTpeq_v1r13IjTQ","value":"The lord giveth and Chuck Norris taketh away"}
->
-< HTTP/1.1 200 OK
-< Content-Encoding: identity
-< Content-Type: application/json
-< Date: Wed, 30 Dec 2020 01:13:54 GMT
-< Content-Length: 323
-<
-* Connection #0 to host localhost left intact
-{"categories":[],"created_at":"2020-01-05 13:42:26.766831","icon_url":"https://assets.chucknorris.host/img/avatar/chuck-norris.png","id":"CfW0ccNFTpeq_v1r13IjTQ","updated_at":"2020-01-05 13:42:26.766831","url":"https://api.chucknorris.io/jokes/CfW0ccNFTpeq_v1r13IjTQ","value":"The lord giveth and Chuck Norris taketh away"}
-* Closing connection 0
-```
-
-**and** also to test some common failures like,
-```sh
-curl -w '\n' -v \
--H "X-Erised-Status-Code:NotFound" \
--H "X-Erised-Content-Type:json" \
--H "X-Erised-Data:{\"timestamp\":\"2020-12-30T11:21:32.793Z\",\"status\":404,\"error\":\"Not Found\",\"message\":\"Chuck Norris knows everything there is to know - Except where this page is.\",\"path\":\"/jokes/random\"}" \
-http://localhost:8080/jokes/random
-```
-```sh
-*   Trying ::1...
-* TCP_NODELAY set
-* Connected to localhost (::1) port 8080 (#0)
-> GET /jokes/random HTTP/1.1
-> Host: localhost:8080
-> User-Agent: curl/7.64.1
-> Accept: */*
-> X-Erised-Status-Code:NotFound
-> X-Erised-Content-Type:json
-> X-Erised-Data:{"timestamp":"2020-12-30T11:21:32.793Z","status":404,"error":"Not Found","message":"Chuck Norris knows everything there is to know - Except where this page is.","path":"/jokes/random"}
->
-< HTTP/1.1 404 Not Found
-< Content-Encoding: identity
-< Content-Type: application/json
-< Date: Wed, 30 Dec 2020 11:25:21 GMT
-< Content-Length: 184
-<
-* Connection #0 to host localhost left intact
-{"timestamp":"2020-12-30T11:21:32.793Z","status":404,"error":"Not Found","message":"Chuck Norris knows everything there is to know - Except where this page is.","path":"/jokes/random"}
 * Closing connection 0
 ```
