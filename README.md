@@ -1,4 +1,3 @@
-
 # erised
 A simple **http server** to test arbitrary responses.
 
@@ -24,7 +23,7 @@ HTTP methods (e.g. GET, POST, PATCH, etc.), query strings and body are **ignored
 
 |Name|Purpose|
 |--|--|
-|erised/headers|Returns all the request headers|
+|erised/headers|Returns request headers|
 |erised/ip|Returns the client IP|
 |erised/info|Returns miscellaneous information|
 
@@ -32,17 +31,17 @@ Response behaviour is controlled via custom headers in the http request:
 
 |Name|Purpose|
 |--|--|
-|X-Erised-Data|Returns the value **as is** in the response body|
-|X-Erised-Content-Type|Returns the value **as is** in the *Content-Type* response header|
-|X-Erised-Status-Code|Used to set the *http status code* value|
-|X-Erised-Location|Returns the value **as is** of a new URL or path when 300 ≤ *X-Erised-Status-Code* < 310
+|X-Erised-Data|Returns the **same** value in the response body|
+|X-Erised-Content-Type|Sets the response _Content-Type_. Valid values are **text** (default) for _text/plain_, **json** for _application/json_, **xml** for _application/xml_ and **gzip** for _application/octet-stream_. When using **gzip**, _Content-Encoding_ is also set to **gzip** and the response body is compressed accordingly.|
+|X-Erised-Status-Code|Sets the HTTP Status Code|
+|X-Erised-Location|Sets the response _Location_ to the new (redirected) URL or path, when 300 ≤ _X-Erised-Status-Code_ < 310
 |X-Erised-Response-Delay|Number of milliseconds to wait before sending response back to client
 
-By design, no validation is performed on *X-Erised-Data*, *X-Erised-Content-Type* or *X-Erised-Location*. Values are returned **as is**
+By design, no validation is performed on _X-Erised-Data_ or _X-Erised-Location_.
 
-Valid *X-Erised-Status-Code* values are as follows:
+Valid _X-Erised-Status-Code_ values are:
 ```text
-OK or 200
+OK or 200 (default)
 
 MultipleChoices or 300
 MovedPermanently or 301
@@ -92,7 +91,8 @@ curl -w '\n' -v http://localhost:8080
 > Accept: */*
 >
 < HTTP/1.1 200 OK
-< Content-Type: text/plain; charset=utf-8
+< Content-Encoding: identity
+< Content-Type: text/plain
 < Date: Tue, 29 Dec 2020 18:35:48 GMT
 < Content-Length: 0
 <
@@ -101,7 +101,7 @@ curl -w '\n' -v http://localhost:8080
 * Closing connection 0
 ```
 
-### Request returning *Hello World* in the response's body:
+### Request returning _Hello World_ in the response's body:
 ```
 curl -w '\n' -v -H "X-Erised-Data:Hello World" http://localhost:8080
 ```
@@ -116,7 +116,8 @@ curl -w '\n' -v -H "X-Erised-Data:Hello World" http://localhost:8080
 > X-Erised-Data:Hello World
 >
 < HTTP/1.1 200 OK
-< Content-Type: text/plain; charset=utf-8
+< Content-Encoding: identity
+< Content-Type: text/plain
 < Date: Tue, 29 Dec 2020 18:38:10 GMT
 < Content-Length: 11
 <
@@ -125,9 +126,9 @@ Hello World
 * Closing connection 0
 ```
 
-### Request returning *[{"Hello":"World"}]* in the response's body and *text/json* in the header's Content-Type
+### Request returning _[{"Hello":"World"}]_ in the response's body and _json_ in the header's Content-Type
 ```
-curl -w '\n' -v -H "X-Erised-Content-Type:text/json; charset=utf-8" -H "X-Erised-Data:[{"Hello":"World"}]" http://localhost:8080
+curl -w '\n' -v -H "X-Erised-Content-Type:json" -H "X-Erised-Data:[{\"Hello\":\"World\"}]" http://localhost:8080
 ```
 ```sh
 *   Trying ::1...
@@ -137,22 +138,23 @@ curl -w '\n' -v -H "X-Erised-Content-Type:text/json; charset=utf-8" -H "X-Erised
 > Host: localhost:8080
 > User-Agent: curl/7.64.1
 > Accept: */*
-> X-Erised-Content-Type:text/json; charset=utf-8
+> X-Erised-Content-Type:json
 > X-Erised-Data:[{Hello:World}]
 >
 < HTTP/1.1 200 OK
-< Content-Type: text/json; charset=utf-8
+< Content-Encoding: identity
+< Content-Type: application/json
 < Date: Tue, 29 Dec 2020 18:43:55 GMT
 < Content-Length: 15
 <
 * Connection #0 to host localhost left intact
-[{Hello:World}]
+[{"Hello":"World"}]
 * Closing connection 0
 ```
 
-### Request returning *text* in the response's body, an arbitrary *application/teapot* in the header's Content-Type and [*418 I'm a teapot*](https://save418.com/) in the header's Status Code
+### Request returning _text_ in the response body and [_418 I'm a teapot_](https://save418.com/) in the header's Status Code
 ```
-curl -w '\n' -v -H "X-Erised-Status-Code:Teapot" -H "X-Erised-Content-Type:application/teapot; charset=utf-8" -H "X-Erised-Data:Server refuses to brew coffee because it is, permanently, a teapot." http://localhost:8080
+curl -w '\n' -v -H "X-Erised-Status-Code:Teapot" -H "X-Erised-Data:Server refuses to brew coffee because it is, permanently, a teapot." http://localhost:8080
 ```
 ```sh
 *   Trying ::1...
@@ -163,11 +165,11 @@ curl -w '\n' -v -H "X-Erised-Status-Code:Teapot" -H "X-Erised-Content-Type:appli
 > User-Agent: curl/7.64.1
 > Accept: */*
 > X-Erised-Status-Code:Teapot
-> X-Erised-Content-Type:application/teapot; charset=utf-8
 > X-Erised-Data:Server refuses to brew coffee because it is, permanently, a teapot.
 >
 < HTTP/1.1 418 I'm a teapot
-< Content-Type: application/teapot; charset=utf-8
+< Content-Encoding: identity
+< Content-Type: text/plain
 < Date: Tue, 29 Dec 2020 18:54:46 GMT
 < Content-Length: 67
 <
@@ -177,7 +179,7 @@ Server refuses to brew coffee because it is, permanently, a teapot.
 ```
 
 # Release History
-* v0.0.3 - Add headers, ip and info paths. Add delayed responses
+* v0.0.3 - Add erised/headers, erised/ip and erised/info paths. Add delayed responses
 * v0.0.2 - Add HTTP redirection status codes (300's), startup configuration parameters and request's logging
 * v0.0.1 - Initial release
 
@@ -224,11 +226,11 @@ curl -w '\n' -v -k https://api.chucknorris.io/jokes/random
 * Closing connection 0
 ```
 
-**Or**, you could use **erised** like this:
+**Or**, better yet, you could use **erised** like this:
 ```sh
 curl -w '\n' -v \
 -H "X-Erised-Status-Code:OK" \
--H "X-Erised-Content-Type:application/json; charset=UTF-8" \
+-H "X-Erised-Content-Type:json" \
 -H "X-Erised-Data:{\"categories\":[],\"created_at\":\"2020-01-05 13:42:26.766831\",\"icon_url\":\"https://assets.chucknorris.host/img/avatar/chuck-norris.png\",\"id\":\"CfW0ccNFTpeq_v1r13IjTQ\",\"updated_at\":\"2020-01-05 13:42:26.766831\",\"url\":\"https://api.chucknorris.io/jokes/CfW0ccNFTpeq_v1r13IjTQ\",\"value\":\"The lord giveth and Chuck Norris taketh away\"}" \
 http://localhost:8080/jokes/random
 ```
@@ -241,11 +243,12 @@ http://localhost:8080/jokes/random
 > User-Agent: curl/7.64.1
 > Accept: */*
 > X-Erised-Status-Code:OK
-> X-Erised-Content-Type:application/json; charset=UTF-8
+> X-Erised-Content-Type:json
 > X-Erised-Data:{"categories":[],"created_at":"2020-01-05 13:42:26.766831","icon_url":"https://assets.chucknorris.host/img/avatar/chuck-norris.png","id":"CfW0ccNFTpeq_v1r13IjTQ","updated_at":"2020-01-05 13:42:26.766831","url":"https://api.chucknorris.io/jokes/CfW0ccNFTpeq_v1r13IjTQ","value":"The lord giveth and Chuck Norris taketh away"}
 >
 < HTTP/1.1 200 OK
-< Content-Type: application/json; charset=UTF-8
+< Content-Encoding: identity
+< Content-Type: application/json
 < Date: Wed, 30 Dec 2020 01:13:54 GMT
 < Content-Length: 323
 <
@@ -258,7 +261,7 @@ http://localhost:8080/jokes/random
 ```sh
 curl -w '\n' -v \
 -H "X-Erised-Status-Code:NotFound" \
--H "X-Erised-Content-Type:application/json; charset=UTF-8" \
+-H "X-Erised-Content-Type:json" \
 -H "X-Erised-Data:{\"timestamp\":\"2020-12-30T11:21:32.793Z\",\"status\":404,\"error\":\"Not Found\",\"message\":\"Chuck Norris knows everything there is to know - Except where this page is.\",\"path\":\"/jokes/random\"}" \
 http://localhost:8080/jokes/random
 ```
@@ -271,11 +274,12 @@ http://localhost:8080/jokes/random
 > User-Agent: curl/7.64.1
 > Accept: */*
 > X-Erised-Status-Code:NotFound
-> X-Erised-Content-Type:application/json; charset=UTF-8
+> X-Erised-Content-Type:json
 > X-Erised-Data:{"timestamp":"2020-12-30T11:21:32.793Z","status":404,"error":"Not Found","message":"Chuck Norris knows everything there is to know - Except where this page is.","path":"/jokes/random"}
 >
 < HTTP/1.1 404 Not Found
-< Content-Type: application/json; charset=UTF-8
+< Content-Encoding: identity
+< Content-Type: application/json
 < Date: Wed, 30 Dec 2020 11:25:21 GMT
 < Content-Length: 184
 <

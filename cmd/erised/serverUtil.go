@@ -1,9 +1,7 @@
 package main
 
 import (
-	"encoding/base64"
-	"encoding/json"
-	"encoding/xml"
+	"compress/gzip"
 	"fmt"
 	"io"
 	"log"
@@ -15,14 +13,25 @@ const (
 	encodingTEXT = iota
 	encodingJSON
 	encodingXML
-	encodingBASE64
+
+	encodingGZIP
 )
+
+func encoding(code string) (int, string, string) {
+	switch code {
+	case "json":
+		return encodingJSON, "application/json", "identity"
+	case "xml":
+		return encodingXML, "application/xml", "identity"
+	case "gzip":
+		return encodingGZIP, "application/octet-stream", "gzip"
+	default:
+		return encodingTEXT, "text/plain", "identity"
+	}
+}
 
 func httpStatusCode(code string) int {
 	switch code {
-	case "OK", "200":
-		return 200
-
 	case "MultipleChoices", "300":
 		return 300
 	case "MovedPermanently", "301":
@@ -94,20 +103,12 @@ func (s *server) respond(res http.ResponseWriter, encoding int, delay time.Durat
 	}
 
 	switch encoding {
-	case encodingTEXT:
+	case encodingTEXT, encodingJSON, encodingXML:
 		if _, err := io.WriteString(res, fmt.Sprintf("%v", data)); err != nil {
 			log.Fatal(err)
 		}
-	case encodingJSON:
-		if err := json.NewEncoder(res).Encode(data); err != nil {
-			log.Fatal(err)
-		}
-	case encodingXML:
-		if err := xml.NewEncoder(res).Encode(data); err != nil {
-			log.Fatal(err)
-		}
-	case encodingBASE64:
-		encoder := base64.NewEncoder(base64.StdEncoding, res)
+	case encodingGZIP:
+		encoder := gzip.NewWriter(res)
 		if _, err := encoder.Write([]byte(fmt.Sprintf("%v", data))); err != nil {
 			log.Fatal(err)
 		}
