@@ -1,5 +1,5 @@
 # erised
-A simple **http server** to test arbitrary responses.
+A simple **http server** to test arbitrary REST API responses.
 
 # Usage
 `erised [options]`
