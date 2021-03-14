@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-const version = "v0.2.1"
+const version = "v0.2.2"
 
 type server struct {
 	mux *http.ServeMux
@@ -42,11 +42,12 @@ func setupFlags(f *flag.FlagSet) {
 		fmt.Println("\nParameters:")
 		flag.PrintDefaults()
 		fmt.Println("\nHTTP Headers:")
-		fmt.Println("X-Erised-Data:\t\t\tReturns the same value in the response body")
 		fmt.Println("X-Erised-Content-Type:\t\tSets the response Content-Type")
-		fmt.Println("X-Erised-Status-Code:\t\tSets the HTTP Status Code")
+		fmt.Println("X-Erised-Data:\t\t\tReturns the same value in the response body")
+		fmt.Println("X-Erised-Headers:\t\tReturns the value(s) in the response header(s). Values must be in a JSON array")
 		fmt.Println("X-Erised-Location:\t\tSets the response Location when 300 ≤ X-Erised-Status-Code < 310")
 		fmt.Println("X-Erised-Response-Delay:\tNumber of milliseconds to wait before sending response back to client")
+		fmt.Println("X-Erised-Status-Code:\t\tSets the HTTP Status Code")
 		fmt.Println()
 	}
 }

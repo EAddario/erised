@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -26,10 +27,27 @@ func (s *server) handleLanding() http.HandlerFunc {
 
 		res.Header().Set("Content-Type", ct)
 		res.Header().Set("Content-Encoding", ce)
+
 		if rd, err := strconv.Atoi(req.Header.Get("X-Erised-Response-Delay")); err == nil {
 			delay = time.Duration(rd) * time.Millisecond
 		}
+
+		hd := req.Header.Get("X-Erised-Headers")
+
+		if json.Valid([]byte(hd)) {
+			var rs map[string]interface{}
+			_ = json.Unmarshal([]byte(hd), &rs)
+
+			if len(rs) != 0 {
+
+				for k, v := range rs {
+					res.Header().Set(k, fmt.Sprintf("%v", v))
+				}
+			}
+		}
+
 		sc := httpStatusCode(req.Header.Get("X-Erised-Status-Code"))
+
 		if sc >= 300 && sc < 310 {
 			res.Header().Set("Location", req.Header.Get("X-Erised-Location"))
 		}
@@ -50,6 +68,7 @@ func (s *server) handleHeaders() http.HandlerFunc {
 		res.Header().Set("Content-Type", "application/json")
 
 		data := "{"
+
 		for k, v := range req.Header {
 			if k == "X-Erised-Data" {
 				if json.Valid([]byte(v[0])) {
@@ -61,6 +80,7 @@ func (s *server) handleHeaders() http.HandlerFunc {
 				data += "\"" + k + "\":\"" + v[0] + "\","
 			}
 		}
+
 		data += "\"Host\":\"" + req.Host + "\""
 		data += "}"
 
