@@ -17,7 +17,13 @@ Parameters:
 
 For help type **erised -h**
 
-Upon executing **erised** with no parameters it will listen on port **8080** for incoming http requests. 
+Upon executing **erised** with no parameters it will listen on port **8080** for incoming http requests.
+
+The latest version is available as a Docker image at [edaddario/erised](https://hub.docker.com/r/edaddario/erised)
+
+```sh
+docker run --rm -p 8080:8080 edaddario/erised
+```
 
 HTTP methods (e.g. GET, POST, PATCH, etc.), query strings and body are **ignored**. URL Paths are also ignored, except for:
 
@@ -31,11 +37,12 @@ Response behaviour is controlled via custom headers in the http request:
 
 |Name|Purpose|
 |--|--|
-|X-Erised-Data|Returns the **same** value in the response body|
 |X-Erised-Content-Type|Sets the response _Content-Type_. Valid values are **text** (default) for _text/plain_, **json** for _application/json_, **xml** for _application/xml_ and **gzip** for _application/octet-stream_. When using **gzip**, _Content-Encoding_ is also set to **gzip** and the response body is compressed accordingly.|
+|X-Erised-Data|Returns the **same** value in the response body|
+|X-Erised-Headers|Returns the value(s) in the response header. Values **must** be in a JSON array|
+|X-Erised-Location|Sets the response _Location_ to the new (redirected) URL or path, when 300 ≤ _X-Erised-Status-Code_ < 310|
+|X-Erised-Response-Delay|Number of **milliseconds** to wait before sending response back to client|
 |X-Erised-Status-Code|Sets the HTTP Status Code|
-|X-Erised-Location|Sets the response _Location_ to the new (redirected) URL or path, when 300 ≤ _X-Erised-Status-Code_ < 310
-|X-Erised-Response-Delay|Number of milliseconds to wait before sending response back to client
 
 By design, no validation is performed on _X-Erised-Data_ or _X-Erised-Location_.
 
@@ -77,6 +84,7 @@ NetworkAuthenticationRequired or 511
 Any other value will resolve to 200 (OK)
 
 # Release History
+* v0.2.2 - Add custom headers, add dockerfile
 * v0.2.1 - Add gzip compression, improve erised/headers json handling
 * v0.0.3 - Add erised/headers, erised/ip and erised/info paths. Add delayed responses
 * v0.0.2 - Add HTTP redirection status codes (300's), startup configuration parameters and request's logging
@@ -89,7 +97,6 @@ Of all its deficiencies, the most notable are:
 * There are not tests (yet)
 * Server does not shutdown gracefully. To stop, process must be terminated
 * https protocol is not supported
-* **erised** does not scale well
 
 I may or may not address any of this in a future release. Caveat Emptor
 
@@ -210,6 +217,18 @@ curl -w '\n' -v http://localhost:8080
 * Closing connection 0
 ```
 
+### Simple request returning custom headers only:
+```
+curl -w '\n' -I -H "X-Erised-Headers:{\"My-Header\":\"Hello World\",\"Another-Header\":\"Goodbye World\"}" http://localhost:8080
+```
+```sh
+HTTP/1.1 200 OK
+Another-Header: Goodbye World
+Content-Encoding: identity
+Content-Type: text/plain
+My-Header: Hello World
+Date: Sat, 13 Mar 2021 22:56:09 GMT
+```
 ### Request returning _Hello World_ in the response's body:
 ```
 curl -w '\n' -v -H "X-Erised-Data:Hello World" http://localhost:8080
