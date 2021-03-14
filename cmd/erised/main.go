@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-const version = "v0.2.2"
+const version = "v0.2.3"
 
 type server struct {
 	mux *http.ServeMux
