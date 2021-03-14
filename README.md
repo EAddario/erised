@@ -39,7 +39,7 @@ Response behaviour is controlled via custom headers in the http request:
 |--|--|
 |X-Erised-Content-Type|Sets the response _Content-Type_. Valid values are **text** (default) for _text/plain_, **json** for _application/json_, **xml** for _application/xml_ and **gzip** for _application/octet-stream_. When using **gzip**, _Content-Encoding_ is also set to **gzip** and the response body is compressed accordingly.|
 |X-Erised-Data|Returns the **same** value in the response body|
-|X-Erised-Headers|Returns the value(s) in the response header. Values **must** be in a JSON array|
+|X-Erised-Headers|Returns the value(s) in the response header. Values **must** be in a JSON key/value list|
 |X-Erised-Location|Sets the response _Location_ to the new (redirected) URL or path, when 300 ≤ _X-Erised-Status-Code_ < 310|
 |X-Erised-Response-Delay|Number of **milliseconds** to wait before sending response back to client|
 |X-Erised-Status-Code|Sets the HTTP Status Code|

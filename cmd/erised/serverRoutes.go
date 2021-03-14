@@ -33,13 +33,10 @@ func (s *server) handleLanding() http.HandlerFunc {
 		}
 
 		hd := req.Header.Get("X-Erised-Headers")
+		var rs map[string]interface{}
 
-		if json.Valid([]byte(hd)) {
-			var rs map[string]interface{}
-			_ = json.Unmarshal([]byte(hd), &rs)
-
+		if err := json.Unmarshal([]byte(hd), &rs); err == nil {
 			if len(rs) != 0 {
-
 				for k, v := range rs {
 					res.Header().Set(k, fmt.Sprintf("%v", v))
 				}
@@ -53,9 +50,7 @@ func (s *server) handleLanding() http.HandlerFunc {
 		}
 
 		res.WriteHeader(sc)
-
 		data := req.Header.Get("X-Erised-Data")
-
 		s.respond(res, enc, delay, data)
 	}
 }
@@ -66,7 +61,6 @@ func (s *server) handleHeaders() http.HandlerFunc {
 			req.Proto, req.RemoteAddr, req.Method, req.Host, req.RequestURI)
 
 		res.Header().Set("Content-Type", "application/json")
-
 		data := "{"
 
 		for k, v := range req.Header {
@@ -83,7 +77,6 @@ func (s *server) handleHeaders() http.HandlerFunc {
 
 		data += "\"Host\":\"" + req.Host + "\""
 		data += "}"
-
 		s.respond(res, encodingJSON, 0, data)
 	}
 }
