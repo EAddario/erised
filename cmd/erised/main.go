@@ -81,7 +81,7 @@ func main() {
 	wt := flag.Int("write", 10, "maximum duration in seconds before timing out response writes")
 	it := flag.Int("idle", 120, "maximum time in seconds to wait for the next request when keep-alive is enabled")
 	lv := flag.String("level", "info", "one of debug/warn/error/off")
-	lf := flag.Bool("json", false, "uses JSON log format")
+	lf := flag.Bool("json", false, "use JSON log format")
 
 	setupFlags(flag.CommandLine)
 	flag.Parse()

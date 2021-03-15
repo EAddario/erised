@@ -8,7 +8,7 @@ Parameters:
   -idle int
     	maximum time in seconds to wait for the next request when keep-alive is enabled (default 120)
   -json
-    	uses JSON log format
+    	use JSON log format
   -level string
     	one of debug/warn/error/off (default "info")
   -port int
