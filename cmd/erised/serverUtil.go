@@ -4,9 +4,10 @@ import (
 	"compress/gzip"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"time"
+
+	"github.com/rs/zerolog/log"
 )
 
 const (
@@ -96,7 +97,12 @@ func httpStatusCode(code string) int {
 }
 
 func (s *server) respond(res http.ResponseWriter, encoding int, delay time.Duration, data interface{}) {
-	time.Sleep(delay)
+	log.Debug().Msg("entering respond")
+
+	if delay > 0 {
+		log.Warn().Str("delay", delay.String()).Msg("pausing execution")
+		time.Sleep(delay)
+	}
 
 	if data == nil {
 		data = ""
@@ -105,17 +111,19 @@ func (s *server) respond(res http.ResponseWriter, encoding int, delay time.Durat
 	switch encoding {
 	case encodingTEXT, encodingJSON, encodingXML:
 		if _, err := io.WriteString(res, fmt.Sprintf("%v", data)); err != nil {
-			log.Fatal(err)
+			log.Error().Msg(err.Error())
 		}
 	case encodingGZIP:
 		encoder := gzip.NewWriter(res)
 		if _, err := encoder.Write([]byte(fmt.Sprintf("%v", data))); err != nil {
-			log.Fatal(err)
+			log.Error().Msg(err.Error())
 		}
 		defer func() {
 			if err := encoder.Close(); err != nil {
-				log.Fatal(err)
+				log.Error().Msg(err.Error())
 			}
 		}()
 	}
+
+	log.Debug().Msg("leaving respond")
 }
