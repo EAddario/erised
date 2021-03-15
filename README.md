@@ -7,6 +7,10 @@ A simple **http server** to test arbitrary REST API responses.
 Parameters:
   -idle int
     	maximum time in seconds to wait for the next request when keep-alive is enabled (default 120)
+  -json
+    	uses JSON log format
+  -level string
+    	one of debug/warn/error/off (default "info")
   -port int
     	port to listen (default 8080)
   -read int
@@ -30,8 +34,9 @@ HTTP methods (e.g. GET, POST, PATCH, etc.), query strings and body are **ignored
 |Name|Purpose|
 |--|--|
 |erised/headers|Returns request headers|
-|erised/ip|Returns the client IP|
 |erised/info|Returns miscellaneous information|
+|erised/ip|Returns the client IP|
+|erised/shutdown|Shutdowns the server|
 
 Response behaviour is controlled via custom headers in the http request:
 
@@ -84,6 +89,7 @@ NetworkAuthenticationRequired or 511
 Any other value will resolve to 200 (OK)
 
 # Release History
+* v0.2.5 - Switch to zerolog logging framework, add erised/shutdown path
 * v0.2.2 - Add custom headers, add dockerfile
 * v0.2.1 - Add gzip compression, improve erised/headers json handling
 * v0.0.3 - Add erised/headers, erised/ip and erised/info paths. Add delayed responses
@@ -95,7 +101,6 @@ Any other value will resolve to 200 (OK)
 
 Of all its deficiencies, the most notable are:
 * There are not tests (yet)
-* Server does not shutdown gracefully. To stop, process must be terminated
 * https protocol is not supported
 
 I may or may not address any of this in a future release. Caveat Emptor
