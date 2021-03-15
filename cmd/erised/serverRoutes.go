@@ -1,26 +1,41 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/rs/zerolog/log"
 )
 
 func (s *server) routes() {
+	log.Debug().Msg("entering routes")
+
 	s.mux.HandleFunc("/", s.handleLanding())
 	s.mux.HandleFunc("/erised/headers", s.handleHeaders())
-	s.mux.HandleFunc("/erised/ip", s.handleIP())
 	s.mux.HandleFunc("/erised/info", s.handleInfo())
+	s.mux.HandleFunc("/erised/ip", s.handleIP())
+	s.mux.HandleFunc("/erised/shutdown", s.handleShutdown())
+
+	log.Debug().Msg("leaving routes")
 }
 
 func (s *server) handleLanding() http.HandlerFunc {
+	log.Debug().Msg("entering handleLanding")
+
 	return func(res http.ResponseWriter, req *http.Request) {
-		log.Printf("%s from %s - %s %s%s",
-			req.Proto, req.RemoteAddr, req.Method, req.Host, req.RequestURI)
+		log.Info().
+			Str("protocol", req.Proto).
+			Str("remoteAddress", req.RemoteAddr).
+			Str("method", req.Method).
+			Str("host", req.Host).
+			Str("uri", req.RequestURI).
+			Msg("handleLanding")
+
 
 		delay := time.Duration(0)
 		enc, ct, ce := encoding(req.Header.Get("X-Erised-Content-Type"))
@@ -30,6 +45,8 @@ func (s *server) handleLanding() http.HandlerFunc {
 
 		if rd, err := strconv.Atoi(req.Header.Get("X-Erised-Response-Delay")); err == nil {
 			delay = time.Duration(rd) * time.Millisecond
+		} else {
+			log.Error().Msg(err.Error())
 		}
 
 		hd := req.Header.Get("X-Erised-Headers")
@@ -41,6 +58,8 @@ func (s *server) handleLanding() http.HandlerFunc {
 					res.Header().Set(k, fmt.Sprintf("%v", v))
 				}
 			}
+		} else {
+			log.Error().Msg(err.Error())
 		}
 
 		sc := httpStatusCode(req.Header.Get("X-Erised-Status-Code"))
@@ -52,13 +71,22 @@ func (s *server) handleLanding() http.HandlerFunc {
 		res.WriteHeader(sc)
 		data := req.Header.Get("X-Erised-Data")
 		s.respond(res, enc, delay, data)
+
+		log.Debug().Msg("leaving handleLanding")
 	}
 }
 
 func (s *server) handleHeaders() http.HandlerFunc {
+	log.Debug().Msg("entering handleHeaders")
+
 	return func(res http.ResponseWriter, req *http.Request) {
-		log.Printf("%s from %s - %s %s%s",
-			req.Proto, req.RemoteAddr, req.Method, req.Host, req.RequestURI)
+		log.Info().
+			Str("protocol", req.Proto).
+			Str("remoteAddress", req.RemoteAddr).
+			Str("method", req.Method).
+			Str("host", req.Host).
+			Str("uri", req.RequestURI).
+			Msg("handleHeaders")
 
 		res.Header().Set("Content-Type", "application/json")
 		data := "{"
@@ -78,28 +106,22 @@ func (s *server) handleHeaders() http.HandlerFunc {
 		data += "\"Host\":\"" + req.Host + "\""
 		data += "}"
 		s.respond(res, encodingJSON, 0, data)
-	}
-}
 
-func (s *server) handleIP() http.HandlerFunc {
-	return func(res http.ResponseWriter, req *http.Request) {
-		log.Printf("%s from %s - %s %s%s",
-			req.Proto, req.RemoteAddr, req.Method, req.Host, req.RequestURI)
-
-		res.Header().Set("Content-Type", "application/json")
-
-		data := "{"
-		data += "\"Client IP\":\"" + req.RemoteAddr + "\""
-		data += "}"
-
-		s.respond(res, encodingJSON, 0, data)
+		log.Debug().Msg("leaving handleHeaders")
 	}
 }
 
 func (s *server) handleInfo() http.HandlerFunc {
+	log.Debug().Msg("entering handleInfo")
+
 	return func(res http.ResponseWriter, req *http.Request) {
-		log.Printf("%s from %s - %s %s%s",
-			req.Proto, req.RemoteAddr, req.Method, req.Host, req.RequestURI)
+		log.Info().
+			Str("protocol", req.Proto).
+			Str("remoteAddress", req.RemoteAddr).
+			Str("method", req.Method).
+			Str("host", req.Host).
+			Str("uri", req.RequestURI).
+			Msg("handleInfo")
 
 		res.Header().Set("Content-Type", "application/json")
 
@@ -111,5 +133,55 @@ func (s *server) handleInfo() http.HandlerFunc {
 		data += "}"
 
 		s.respond(res, encodingJSON, 0, data)
+
+		log.Debug().Msg("leaving handleInfo")
+	}
+}
+
+func (s *server) handleIP() http.HandlerFunc {
+	log.Debug().Msg("entering handleIP")
+
+	return func(res http.ResponseWriter, req *http.Request) {
+		log.Info().
+			Str("protocol", req.Proto).
+			Str("remoteAddress", req.RemoteAddr).
+			Str("method", req.Method).
+			Str("host", req.Host).
+			Str("uri", req.RequestURI).
+			Msg("handleIP")
+
+		res.Header().Set("Content-Type", "application/json")
+
+		data := "{"
+		data += "\"Client IP\":\"" + req.RemoteAddr + "\""
+		data += "}"
+
+		s.respond(res, encodingJSON, 0, data)
+
+		log.Debug().Msg("leaving handleIP")
+	}
+}
+
+func (s *server) handleShutdown() http.HandlerFunc {
+	log.Debug().Msg("entering handleShutdown")
+
+	return func(res http.ResponseWriter, req *http.Request) {
+		log.Info().
+			Str("protocol", req.Proto).
+			Str("remoteAddress", req.RemoteAddr).
+			Str("method", req.Method).
+			Str("host", req.Host).
+			Str("uri", req.RequestURI).
+			Msg("handleShutdown")
+
+		res.Header().Set("Content-Type", "application/json")
+
+		s.respond(res, encodingJSON, 0, "{\"shutdown\":\"ok\"}")
+
+		if err := s.cfg.Shutdown(context.Background()); err != nil {
+			log.Error().Msg(err.Error())
+		}
+
+		log.Debug().Msg("leaving handleShutdown")
 	}
 }
