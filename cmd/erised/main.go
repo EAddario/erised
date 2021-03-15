@@ -13,7 +13,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-const version = "v0.2.4"
+const version = "v0.2.5"
 
 type server struct {
 	mux *http.ServeMux
@@ -80,7 +80,7 @@ func main() {
 	rt := flag.Int("read", 5, "maximum duration in seconds for reading the entire request")
 	wt := flag.Int("write", 10, "maximum duration in seconds before timing out response writes")
 	it := flag.Int("idle", 120, "maximum time in seconds to wait for the next request when keep-alive is enabled")
-	lv := flag.String("level", "info", "one of debug/warn/error/off. info used otherwise")
+	lv := flag.String("level", "info", "one of debug/warn/error/off")
 	lf := flag.Bool("json", false, "uses JSON log format")
 
 	setupFlags(flag.CommandLine)
@@ -104,7 +104,14 @@ func main() {
 	srv := newServer(*pt, *rt, *wt, *it)
 
 	if err := srv.cfg.ListenAndServe(); err != nil {
-		log.Fatal().Msg(err.Error())
+		switch err {
+		case http.ErrServerClosed:
+			log.Warn().Msg(err.Error())
+		case http.ErrBodyReadAfterClose, http.ErrHandlerTimeout, http.ErrLineTooLong:
+			log.Error().Msg(err.Error())
+		default:
+			log.Fatal().Msg(err.Error())
+		}
 	}
 
 	defer log.Log().Msg("erised server shutting down")

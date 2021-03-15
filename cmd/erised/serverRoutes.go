@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -16,8 +17,9 @@ func (s *server) routes() {
 
 	s.mux.HandleFunc("/", s.handleLanding())
 	s.mux.HandleFunc("/erised/headers", s.handleHeaders())
-	s.mux.HandleFunc("/erised/ip", s.handleIP())
 	s.mux.HandleFunc("/erised/info", s.handleInfo())
+	s.mux.HandleFunc("/erised/ip", s.handleIP())
+	s.mux.HandleFunc("/erised/shutdown", s.handleShutdown())
 
 	log.Debug().Msg("leaving routes")
 }
@@ -109,30 +111,6 @@ func (s *server) handleHeaders() http.HandlerFunc {
 	}
 }
 
-func (s *server) handleIP() http.HandlerFunc {
-	log.Debug().Msg("entering handleIP")
-
-	return func(res http.ResponseWriter, req *http.Request) {
-		log.Info().
-			Str("protocol", req.Proto).
-			Str("remoteAddress", req.RemoteAddr).
-			Str("method", req.Method).
-			Str("host", req.Host).
-			Str("uri", req.RequestURI).
-			Msg("handleIP")
-
-		res.Header().Set("Content-Type", "application/json")
-
-		data := "{"
-		data += "\"Client IP\":\"" + req.RemoteAddr + "\""
-		data += "}"
-
-		s.respond(res, encodingJSON, 0, data)
-
-		log.Debug().Msg("leaving handleIP")
-	}
-}
-
 func (s *server) handleInfo() http.HandlerFunc {
 	log.Debug().Msg("entering handleInfo")
 
@@ -157,5 +135,53 @@ func (s *server) handleInfo() http.HandlerFunc {
 		s.respond(res, encodingJSON, 0, data)
 
 		log.Debug().Msg("leaving handleInfo")
+	}
+}
+
+func (s *server) handleIP() http.HandlerFunc {
+	log.Debug().Msg("entering handleIP")
+
+	return func(res http.ResponseWriter, req *http.Request) {
+		log.Info().
+			Str("protocol", req.Proto).
+			Str("remoteAddress", req.RemoteAddr).
+			Str("method", req.Method).
+			Str("host", req.Host).
+			Str("uri", req.RequestURI).
+			Msg("handleIP")
+
+		res.Header().Set("Content-Type", "application/json")
+
+		data := "{"
+		data += "\"Client IP\":\"" + req.RemoteAddr + "\""
+		data += "}"
+
+		s.respond(res, encodingJSON, 0, data)
+
+		log.Debug().Msg("leaving handleIP")
+	}
+}
+
+func (s *server) handleShutdown() http.HandlerFunc {
+	log.Debug().Msg("entering handleShutdown")
+
+	return func(res http.ResponseWriter, req *http.Request) {
+		log.Info().
+			Str("protocol", req.Proto).
+			Str("remoteAddress", req.RemoteAddr).
+			Str("method", req.Method).
+			Str("host", req.Host).
+			Str("uri", req.RequestURI).
+			Msg("handleShutdown")
+
+		res.Header().Set("Content-Type", "application/json")
+
+		s.respond(res, encodingJSON, 0, "{\"shutdown\":\"ok\"}")
+
+		if err := s.cfg.Shutdown(context.Background()); err != nil {
+			log.Error().Msg(err.Error())
+		}
+
+		log.Debug().Msg("leaving handleShutdown")
 	}
 }
