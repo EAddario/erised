@@ -89,6 +89,7 @@ NetworkAuthenticationRequired or 511
 Any other value will resolve to 200 (OK)
 
 # Release History
+* v0.3.0 - Add unit tests
 * v0.2.5 - Switch to zerolog logging framework, add erised/shutdown path
 * v0.2.2 - Add custom headers, add dockerfile
 * v0.2.1 - Add gzip compression, improve erised/headers json handling
@@ -99,11 +100,10 @@ Any other value will resolve to 200 (OK)
 # Known Issues
 **erised** is full of bugs and "_...men have wasted away before it, not knowing if what they have seen is real, or even possible..._" so use it with caution for it gives no knowledge or truth.
 
-Of all its deficiencies, the most notable are:
-* There are not tests (yet)
-* https protocol is not supported
+Of all of its deficiencies, the most notable is:
+* https protocol is not yet supported
 
-I may or may not address any of this in a future release. Caveat Emptor
+I may or may not address this in a future release. Caveat Emptor
 
 # Motivation
 When developing and testing REST based API clients, sooner or later I'd come across situations where I needed a quick and easy way to dynamically test endpoint's responses under different scenarios. Although there are many excellent frameworks and mock servers available, the time and effort required to configure them is sometimes not justified, specially if the application under test provides 10's or 100's of paths, so after some brief and unsuccessful googling I decided to create my own.
