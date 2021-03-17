@@ -46,7 +46,7 @@ func (s *server) handleLanding() http.HandlerFunc {
 		if rd, err := strconv.Atoi(req.Header.Get("X-Erised-Response-Delay")); err == nil {
 			delay = time.Duration(rd) * time.Millisecond
 		} else {
-			log.Error().Msg(err.Error())
+			log.Debug().Msg("Invalid X-Erised-Response-Delay")
 		}
 
 		hd := req.Header.Get("X-Erised-Headers")
@@ -59,7 +59,7 @@ func (s *server) handleLanding() http.HandlerFunc {
 				}
 			}
 		} else {
-			log.Error().Msg(err.Error())
+			log.Debug().Msg("Invalid X-Erised-Headers JSON list")
 		}
 
 		sc := httpStatusCode(req.Header.Get("X-Erised-Status-Code"))

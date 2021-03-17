@@ -13,7 +13,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-const version = "v0.3.0"
+const version = "v0.3.1"
 
 type server struct {
 	mux *http.ServeMux
