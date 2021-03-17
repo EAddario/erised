@@ -89,6 +89,7 @@ NetworkAuthenticationRequired or 511
 Any other value will resolve to 200 (OK)
 
 # Release History
+* v0.3.0 - Add unit tests
 * v0.2.5 - Switch to zerolog logging framework, add erised/shutdown path
 * v0.2.2 - Add custom headers, add dockerfile
 * v0.2.1 - Add gzip compression, improve erised/headers json handling
