@@ -43,10 +43,8 @@ func (s *server) handleLanding() http.HandlerFunc {
 		res.Header().Set("Content-Type", ct)
 		res.Header().Set("Content-Encoding", ce)
 
-		if rd, err := strconv.Atoi(req.Header.Get("X-Erised-Response-Delay")); err == nil {
+		if rd, err := strconv.Atoi(req.Header.Get("X-Erised-Response-Delay")); rd > 0 && err == nil {
 			delay = time.Duration(rd) * time.Millisecond
-		} else {
-			log.Debug().Msg("Invalid X-Erised-Response-Delay")
 		}
 
 		hd := req.Header.Get("X-Erised-Headers")
@@ -58,8 +56,6 @@ func (s *server) handleLanding() http.HandlerFunc {
 					res.Header().Set(k, fmt.Sprintf("%v", v))
 				}
 			}
-		} else {
-			log.Debug().Msg("Invalid X-Erised-Headers JSON list")
 		}
 
 		sc := httpStatusCode(req.Header.Get("X-Erised-Status-Code"))
