@@ -29,7 +29,7 @@ The latest version is available as a Docker image at [edaddario/erised](https://
 docker run --rm -p 8080:8080 edaddario/erised
 ```
 
-HTTP methods (e.g. GET, POST, PATCH, etc.), query strings and body are **ignored**. URL Paths are also ignored, except for:
+HTTP methods (e.g. GET, POST, PATCH, etc.), query strings and body are **ignored**. URL routes are also ignored, except for:
 
 |Name|Purpose|
 |--|--|
@@ -89,11 +89,12 @@ NetworkAuthenticationRequired or 511
 Any other value will resolve to 200 (OK)
 
 # Release History
-* v0.3.0 - Add unit tests
+* v0.3.4 - Add [gomega](https://onsi.github.io/gomega/) assertion library, refactor tests to use Ω assertions and minor bug fixes
+* v0.3.0 - Add [goblin](https://github.com/franela/goblin) framework and unit tests
 * v0.2.5 - Switch to zerolog logging framework, add erised/shutdown path
 * v0.2.2 - Add custom headers, add dockerfile
 * v0.2.1 - Add gzip compression, improve erised/headers json handling
-* v0.0.3 - Add erised/headers, erised/ip and erised/info paths. Add delayed responses
+* v0.0.3 - Add erised/headers, erised/ip and erised/info routes. Add delayed responses
 * v0.0.2 - Add HTTP redirection status codes (300's), startup configuration parameters and request's logging
 * v0.0.1 - Initial release
 
@@ -106,7 +107,7 @@ Of all of its deficiencies, the most notable is:
 I may or may not address this in a future release. Caveat Emptor
 
 # Motivation
-When developing and testing REST based API clients, sooner or later I'd come across situations where I needed a quick and easy way to dynamically test endpoint's responses under different scenarios. Although there are many excellent frameworks and mock servers available, the time and effort required to configure them is sometimes not justified, specially if the application under test provides 10's or 100's of paths, so after some brief and unsuccessful googling I decided to create my own.
+When developing and testing REST based API clients, sooner or later I'd come across situations where I needed a quick and easy way to dynamically test endpoint's responses under different scenarios. Although there are many excellent frameworks and mock servers available, the time and effort required to configure them is sometimes not justified, specially if the application under test provides 10's or 100's of routes, so after some brief and unsuccessful googling I decided to create my own.
 
 **erised** was inspired somewhat by [Kenneth Reitz's](https://kennethreitz.org/) HTTP Request & Response Service [httpbin.io](https://httpbin.org/) and it may offer similar functionality in future releases.
 
