@@ -183,7 +183,7 @@ func TestErisedLandingRoute(t *testing.T) {
 			Ω(res.Header().Get("X-Headers-Two")).Should(Equal("I'm header two"))
 		})
 
-		g.It("Should wait 2000ms", func() {
+		g.It("Should wait about 2000ms (±10ms)", func() {
 			res := httptest.NewRecorder()
 			req := httptest.NewRequest(http.MethodGet, "http://localhost:8080/", nil)
 			req.Header.Set("X-Erised-Response-Delay", "2000")
