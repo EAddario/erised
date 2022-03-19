@@ -13,7 +13,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-const version = "v0.3.4"
+const version = "v0.4.1"
 
 type server struct {
 	mux *http.ServeMux
@@ -80,7 +80,7 @@ func main() {
 	rt := flag.Int("read", 5, "maximum duration in seconds for reading the entire request")
 	wt := flag.Int("write", 10, "maximum duration in seconds before timing out response writes")
 	it := flag.Int("idle", 120, "maximum time in seconds to wait for the next request when keep-alive is enabled")
-	lv := flag.String("level", "info", "one of debug/warn/error/off")
+	lv := flag.String("level", "info", "one of debug/info/warn/error/off")
 	lf := flag.Bool("json", false, "use JSON log format")
 
 	setupFlags(flag.CommandLine)
@@ -89,6 +89,8 @@ func main() {
 	switch strings.ToLower(*lv) {
 	case "debug":
 		zerolog.SetGlobalLevel(zerolog.DebugLevel)
+	case "info":
+		zerolog.SetGlobalLevel(zerolog.InfoLevel)
 	case "warn":
 		zerolog.SetGlobalLevel(zerolog.WarnLevel)
 	case "error":
