@@ -16,7 +16,7 @@ func TestErisedInfoRoute(t *testing.T) {
 	g := goblin.Goblin(t)
 	RegisterFailHandler(func(m string, _ ...int) { g.Fail(m) })
 	exp := `{"Host":"localhost:8080","Method":"GET","Protocol":"HTTP/1.1","Request URI":"http://localhost:8080/erised/info"}`
-	svr := server {}
+	svr := server{}
 	req := httptest.NewRequest(http.MethodGet, "http://localhost:8080/erised/info", nil)
 	res := httptest.NewRecorder()
 	svr.handleInfo().ServeHTTP(res, req)
@@ -41,7 +41,7 @@ func TestErisedIPRoute(t *testing.T) {
 	g := goblin.Goblin(t)
 	RegisterFailHandler(func(m string, _ ...int) { g.Fail(m) })
 	exp := `{"Client IP":"192.0.2.1:1234"}`
-	svr := server {}
+	svr := server{}
 	req := httptest.NewRequest(http.MethodGet, "http://localhost:8080/erised/ip", nil)
 	res := httptest.NewRecorder()
 	svr.handleIP().ServeHTTP(res, req)
@@ -66,7 +66,7 @@ func TestErisedHeadersRoute(t *testing.T) {
 	g := goblin.Goblin(t)
 	RegisterFailHandler(func(m string, _ ...int) { g.Fail(m) })
 	exp := `{"Host":"localhost:8080"}`
-	svr := server {}
+	svr := server{}
 	req := httptest.NewRequest(http.MethodGet, "http://localhost:8080/erised/headers", nil)
 	res := httptest.NewRecorder()
 	svr.handleHeaders().ServeHTTP(res, req)
@@ -86,11 +86,11 @@ func TestErisedHeadersRoute(t *testing.T) {
 	})
 }
 
-func TestErisedLandingRoute(t *testing.T) {
+func TestErisedLandingRouteNoWait(t *testing.T) {
 	zerolog.SetGlobalLevel(zerolog.Disabled)
 	g := goblin.Goblin(t)
 	RegisterFailHandler(func(m string, _ ...int) { g.Fail(m) })
-	svr := server {}
+	svr := server{}
 
 	g.Describe("Test /", func() {
 		g.It("Should return StatusOK", func() {
@@ -183,6 +183,40 @@ func TestErisedLandingRoute(t *testing.T) {
 			Ω(res.Header().Get("X-Headers-Two")).Should(Equal("I'm header two"))
 		})
 
+		g.It("Should not fail", func() {
+			exp := `{"hello":"world"}`
+			res := httptest.NewRecorder()
+			req := httptest.NewRequest(http.MethodGet, "http://localhost:8080/", nil)
+			req.Header.Set("X-Erised-Content-Type", "json")
+			req.Header.Set("X-Erised-Data", exp)
+			req.Header.Set("X-Erised-Headers", exp)
+			req.Header.Set("X-Erised-Location", "https://www.example.com")
+			req.Header.Set("X-Erised-Status-Code", "MovedPermanently")
+			svr.handleLanding().ServeHTTP(res, req)
+
+			Ω(res).Should(HaveHTTPStatus(http.StatusMovedPermanently))
+			Ω(res.Header().Get("Location")).Should(Equal("https://www.example.com"))
+			Ω(res.Header().Get("Content-Type")).Should(Equal("application/json"))
+			Ω(res.Header().Get("Content-Encoding")).Should(Equal("identity"))
+			Ω(res.Header().Get("hello")).Should(Equal("world"))
+			Ω(res.Body.String()).Should(Equal(exp))
+		})
+	})
+}
+
+func TestErisedLandingRouteWait(t *testing.T) {
+	zerolog.SetGlobalLevel(zerolog.Disabled)
+	g := goblin.Goblin(t)
+	RegisterFailHandler(func(m string, _ ...int) { g.Fail(m) })
+	svr := server{}
+
+	g.Describe("Test /", func() {
+
+		res := httptest.NewRecorder()
+		req := httptest.NewRequest(http.MethodGet, "http://localhost:8080/", nil)
+		req.Header.Set("X-Erised-Response-Delay", "2000")
+		svr.handleLanding().ServeHTTP(res, req)
+
 		g.It("Should wait about 2000ms (±10ms)", func() {
 			res := httptest.NewRecorder()
 			req := httptest.NewRequest(http.MethodGet, "http://localhost:8080/", nil)
@@ -193,28 +227,8 @@ func TestErisedLandingRoute(t *testing.T) {
 			el := time.Since(st)
 
 			Ω(res).Should(HaveHTTPStatus(http.StatusOK))
-			Ω(el).Should(BeNumerically("~", time.Millisecond * 2000 , time.Millisecond * 10))
+			Ω(el).Should(BeNumerically("~", time.Millisecond*2000, time.Millisecond*10))
 			Ω(res.Body.String()).Should(BeEmpty())
-		})
-
-		g.It("Should not fail", func() {
-			exp := `{"hello":"world"}`
-			res := httptest.NewRecorder()
-			req := httptest.NewRequest(http.MethodGet, "http://localhost:8080/", nil)
-			req.Header.Set("X-Erised-Content-Type", "json")
-			req.Header.Set("X-Erised-Data", exp)
-			req.Header.Set("X-Erised-Headers", exp)
-			req.Header.Set("X-Erised-Location", "https://www.example.com")
-			req.Header.Set("X-Erised-Response-Delay", "0")
-			req.Header.Set("X-Erised-Status-Code", "MovedPermanently")
-			svr.handleLanding().ServeHTTP(res, req)
-
-			Ω(res).Should(HaveHTTPStatus(http.StatusMovedPermanently))
-			Ω(res.Header().Get("Location")).Should(Equal("https://www.example.com"))
-			Ω(res.Header().Get("Content-Type")).Should(Equal("application/json"))
-			Ω(res.Header().Get("Content-Encoding")).Should(Equal("identity"))
-			Ω(res.Header().Get("hello")).Should(Equal("world"))
-			Ω(res.Body.String()).Should(Equal(exp))
 		})
 	})
 }

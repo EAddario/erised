@@ -6,7 +6,7 @@ RUN go mod download
 COPY . .
 RUN go build -o /go/bin/erised -ldflags "-s -w"
 
-FROM gcr.io/distroless/base-debian10
+FROM gcr.io/distroless/base-debian11
 COPY --from=build /go/bin/erised /
 EXPOSE 8080
 

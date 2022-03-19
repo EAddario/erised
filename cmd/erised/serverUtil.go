@@ -14,7 +14,6 @@ const (
 	encodingTEXT = iota
 	encodingJSON
 	encodingXML
-
 	encodingGZIP
 )
 

@@ -89,6 +89,7 @@ NetworkAuthenticationRequired or 511
 Any other value will resolve to 200 (OK)
 
 # Release History
+* v0.4.1 - Add route concurrency, update tests and dependencies
 * v0.3.4 - Add [gomega](https://onsi.github.io/gomega/) assertion library, refactor tests to use Ω assertions and minor bug fixes
 * v0.3.0 - Add [goblin](https://github.com/franela/goblin) framework and unit tests
 * v0.2.5 - Switch to zerolog logging framework, add erised/shutdown path

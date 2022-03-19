@@ -15,11 +15,11 @@ import (
 func (s *server) routes() {
 	log.Debug().Msg("entering routes")
 
-	s.mux.HandleFunc("/", s.handleLanding())
-	s.mux.HandleFunc("/erised/headers", s.handleHeaders())
-	s.mux.HandleFunc("/erised/info", s.handleInfo())
-	s.mux.HandleFunc("/erised/ip", s.handleIP())
-	s.mux.HandleFunc("/erised/shutdown", s.handleShutdown())
+	go s.mux.HandleFunc("/", s.handleLanding())
+	go s.mux.HandleFunc("/erised/headers", s.handleHeaders())
+	go s.mux.HandleFunc("/erised/info", s.handleInfo())
+	go s.mux.HandleFunc("/erised/ip", s.handleIP())
+	go s.mux.HandleFunc("/erised/shutdown", s.handleShutdown())
 
 	log.Debug().Msg("leaving routes")
 }
@@ -35,7 +35,6 @@ func (s *server) handleLanding() http.HandlerFunc {
 			Str("host", req.Host).
 			Str("uri", req.RequestURI).
 			Msg("handleLanding")
-
 
 		delay := time.Duration(0)
 		enc, ct, ce := encoding(req.Header.Get("X-Erised-Content-Type"))
