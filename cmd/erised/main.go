@@ -13,7 +13,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-const version = "v0.4.1"
+const version = "v0.5.0"
 
 type server struct {
 	mux *http.ServeMux
@@ -66,6 +66,7 @@ func setupFlags(f *flag.FlagSet) {
 		fmt.Println("X-Erised-Headers:\t\tReturns the value(s) in the response header(s). Values must be in a JSON array")
 		fmt.Println("X-Erised-Location:\t\tSets the response Location when 300 ≤ X-Erised-Status-Code < 310")
 		fmt.Println("X-Erised-Response-Delay:\tNumber of milliseconds to wait before sending response back to client")
+		fmt.Println("X-Erised-Response-File:\t\tReturns the content of filename in the response body. If present, X-Erised-Data is ignored")
 		fmt.Println("X-Erised-Status-Code:\t\tSets the HTTP Status Code")
 		fmt.Println()
 	}

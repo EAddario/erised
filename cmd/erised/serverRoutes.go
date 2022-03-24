@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"strconv"
 	"strings"
@@ -64,7 +65,17 @@ func (s *server) handleLanding() http.HandlerFunc {
 		}
 
 		res.WriteHeader(sc)
-		data := req.Header.Get("X-Erised-Data")
+
+		data := ""
+		if fn := req.Header.Get("X-Erised-Response-File"); fn != "" {
+			if ct, err := ioutil.ReadFile(fn); err != nil {
+				log.Error().Msg("Invalid filename or file not found")
+			} else {
+				data = string(ct)
+			}
+		} else {
+			data = req.Header.Get("X-Erised-Data")
+		}
 		s.respond(res, enc, delay, data)
 
 		log.Debug().Msg("leaving handleLanding")
