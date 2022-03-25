@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -35,6 +37,7 @@ func (s *server) handleLanding() http.HandlerFunc {
 			Str("method", req.Method).
 			Str("host", req.Host).
 			Str("uri", req.RequestURI).
+			Str("searchPath", *s.pth).
 			Msg("handleLanding")
 
 		delay := time.Duration(0)
@@ -68,11 +71,29 @@ func (s *server) handleLanding() http.HandlerFunc {
 
 		data := ""
 		if fn := req.Header.Get("X-Erised-Response-File"); fn != "" {
-			if ct, err := ioutil.ReadFile(fn); err != nil {
-				log.Error().Msg("Invalid filename or file not found")
-			} else {
-				data = string(ct)
+
+			err := filepath.Walk(*s.pth, func(path string, info os.FileInfo, err error) error {
+
+				if err != nil {
+					log.Error().Msg("Invalid path: " + path)
+					return nil
+				}
+
+				if !info.IsDir() && filepath.Base(path) == fn {
+					if ct, err := ioutil.ReadFile(path); err != nil {
+						log.Error().Msg("Unable to open the file: " + path)
+					} else {
+						data = string(ct)
+					}
+				}
+
+				return nil
+			})
+
+			if data == "" || err != nil {
+				log.Error().Msg("File not found: " + fn)
 			}
+
 		} else {
 			data = req.Header.Get("X-Erised-Data")
 		}
