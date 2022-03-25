@@ -11,6 +11,8 @@ Parameters:
     	use JSON log format
   -level string
     	one of debug/warn/error/off (default "info")
+  -path string
+    	path to search recursively for X-Erised-Response-File (default ".")
   -port int
     	port to listen (default 8080)
   -read int
@@ -47,6 +49,7 @@ Response behaviour is controlled via custom headers in the http request:
 |X-Erised-Headers|Returns the value(s) in the response header. Values **must** be in a JSON key/value list|
 |X-Erised-Location|Sets the response _Location_ to the new (redirected) URL or path, when 300 ≤ _X-Erised-Status-Code_ < 310|
 |X-Erised-Response-Delay|Number of **milliseconds** to wait before sending response back to client|
+|X-Erised-Response-File|Returns the contents of **file** in the response body. If present, _X-Erised-Data_ is ignored|
 |X-Erised-Status-Code|Sets the HTTP Status Code|
 
 By design, no validation is performed on _X-Erised-Data_ or _X-Erised-Location_.
@@ -89,6 +92,7 @@ NetworkAuthenticationRequired or 511
 Any other value will resolve to 200 (OK)
 
 # Release History
+* v0.5.3 - Add file based responses
 * v0.4.1 - Add route concurrency, update tests and dependencies
 * v0.3.4 - Add [gomega](https://onsi.github.io/gomega/) assertion library, refactor tests to use Ω assertions and minor bug fixes
 * v0.3.0 - Add [goblin](https://github.com/franela/goblin) framework and unit tests
