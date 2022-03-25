@@ -86,11 +86,12 @@ func TestErisedHeadersRoute(t *testing.T) {
 	})
 }
 
-func TestErisedLandingRouteNoWait(t *testing.T) {
+func TestErisedLandingRoute(t *testing.T) {
 	zerolog.SetGlobalLevel(zerolog.Disabled)
 	g := goblin.Goblin(t)
 	RegisterFailHandler(func(m string, _ ...int) { g.Fail(m) })
-	svr := server{}
+	path := "."
+	svr := server{pth: &path}
 
 	g.Describe("Test /", func() {
 		g.It("Should return StatusOK", func() {
@@ -183,6 +184,20 @@ func TestErisedLandingRouteNoWait(t *testing.T) {
 			Ω(res.Header().Get("X-Headers-Two")).Should(Equal("I'm header two"))
 		})
 
+		g.It("Should return serverRoutes_test.json file content in body", func() {
+			exp := `{"Name":"serverRoutes_test"}`
+			res := httptest.NewRecorder()
+			req := httptest.NewRequest(http.MethodGet, "http://localhost:8080/", nil)
+			req.Header.Set("X-Erised-Content-Type", "json")
+			req.Header.Set("X-Erised-Response-File", "serverRoutes_test.json")
+			svr.handleLanding().ServeHTTP(res, req)
+
+			Ω(res).Should(HaveHTTPStatus(http.StatusOK))
+			Ω(res.Header().Get("Content-Type")).Should(Equal("application/json"))
+			Ω(res.Header().Get("Content-Encoding")).Should(Equal("identity"))
+			Ω(res.Body.String()).Should(Equal(exp))
+		})
+
 		g.It("Should not fail", func() {
 			exp := `{"hello":"world"}`
 			res := httptest.NewRecorder()
@@ -201,21 +216,6 @@ func TestErisedLandingRouteNoWait(t *testing.T) {
 			Ω(res.Header().Get("hello")).Should(Equal("world"))
 			Ω(res.Body.String()).Should(Equal(exp))
 		})
-	})
-}
-
-func TestErisedLandingRouteWait(t *testing.T) {
-	zerolog.SetGlobalLevel(zerolog.Disabled)
-	g := goblin.Goblin(t)
-	RegisterFailHandler(func(m string, _ ...int) { g.Fail(m) })
-	svr := server{}
-
-	g.Describe("Test /", func() {
-
-		res := httptest.NewRecorder()
-		req := httptest.NewRequest(http.MethodGet, "http://localhost:8080/", nil)
-		req.Header.Set("X-Erised-Response-Delay", "2000")
-		svr.handleLanding().ServeHTTP(res, req)
 
 		g.It("Should wait about 2000ms (±10ms)", func() {
 			res := httptest.NewRecorder()

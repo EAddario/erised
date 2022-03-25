@@ -13,11 +13,12 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-const version = "v0.4.1"
+const version = "v0.5.3"
 
 type server struct {
 	mux *http.ServeMux
 	cfg *http.Server
+	pth *string
 }
 
 func init() {
@@ -25,7 +26,7 @@ func init() {
 	zerolog.SetGlobalLevel(zerolog.InfoLevel)
 }
 
-func newServer(port, read, write, idle int) *server {
+func newServer(port, read, write, idle int, path string) *server {
 	log.Debug().Msg("entering newServer")
 
 	s := &server{}
@@ -37,6 +38,7 @@ func newServer(port, read, write, idle int) *server {
 		WriteTimeout: time.Duration(write) * time.Second,
 		IdleTimeout:  time.Duration(idle) * time.Second,
 	}
+	s.pth = &path
 	s.routes()
 
 	log.Log().
@@ -45,6 +47,7 @@ func newServer(port, read, write, idle int) *server {
 		Str("readTimeout", s.cfg.ReadTimeout.String()).
 		Str("writeTimeout", s.cfg.WriteTimeout.String()).
 		Str("idleTimeout", s.cfg.IdleTimeout.String()).
+		Str("path", path).
 		Msg("erised server running")
 
 	log.Debug().Msg("leaving newServer")
@@ -66,6 +69,7 @@ func setupFlags(f *flag.FlagSet) {
 		fmt.Println("X-Erised-Headers:\t\tReturns the value(s) in the response header(s). Values must be in a JSON array")
 		fmt.Println("X-Erised-Location:\t\tSets the response Location when 300 ≤ X-Erised-Status-Code < 310")
 		fmt.Println("X-Erised-Response-Delay:\tNumber of milliseconds to wait before sending response back to client")
+		fmt.Println("X-Erised-Response-File:\t\tReturns the contents of file in the response body. If present, X-Erised-Data is ignored")
 		fmt.Println("X-Erised-Status-Code:\t\tSets the HTTP Status Code")
 		fmt.Println()
 	}
@@ -82,6 +86,7 @@ func main() {
 	it := flag.Int("idle", 120, "maximum time in seconds to wait for the next request when keep-alive is enabled")
 	lv := flag.String("level", "info", "one of debug/info/warn/error/off")
 	lf := flag.Bool("json", false, "use JSON log format")
+	ph := flag.String("path", ".", "path to search recursively for X-Erised-Response-File")
 
 	setupFlags(flag.CommandLine)
 	flag.Parse()
@@ -103,7 +108,7 @@ func main() {
 		log.Logger = zerolog.New(os.Stderr).With().Timestamp().Logger()
 	}
 
-	srv := newServer(*pt, *rt, *wt, *it)
+	srv := newServer(*pt, *rt, *wt, *it, *ph)
 
 	if err := srv.cfg.ListenAndServe(); err != nil {
 		switch err {
