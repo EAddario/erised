@@ -10,7 +10,7 @@ Parameters:
   -json
     	use JSON log format
   -level string
-    	one of debug/warn/error/off (default "info")
+    	one of debug/info/warn/error/off (default "info")
   -path string
     	path to search recursively for X-Erised-Response-File (default ".")
   -port int
@@ -23,12 +23,24 @@ Parameters:
 
 For help type **erised -h**
 
-Upon executing **erised** with no parameters it will listen on port **8080** for incoming http requests.
+Upon executing **erised** with no parameters, the server will listen on port **8080** for incoming http requests.
 
-The latest version is available as a Docker image at [edaddario/erised](https://hub.docker.com/r/edaddario/erised)
+When using the _-path_ option, please **EXERCISE GREAT CAUTION** choosing the path to search. See **Known Issues** for more information.
+
+The latest version is also available as a Docker image at [edaddario/erised](https://hub.docker.com/r/edaddario/erised).
+
+To start the server in a docker container, with defaults values, exceute the following command:
 
 ```sh
 docker run --rm -p 8080:8080 edaddario/erised
+```
+
+If you would like to return file based responses (_X-Erised-Response-File_ set) when using the docker image, you'll need to map the directory containing your local files and set the _-path_ option accordingly.
+
+The following example maps the **/local_directory/response_files** directory in your local machine to **/files** in the docker image, and then sets the **-path** option:
+
+```sh
+docker run --rm -p 8080:8080 -v /local_directory/response_files:/files edaddario/erised -path ./files
 ```
 
 HTTP methods (e.g. GET, POST, PATCH, etc.), query strings and body are **ignored**. URL routes are also ignored, except for:
@@ -107,6 +119,7 @@ Any other value will resolve to 200 (OK)
 **erised** is full of bugs and "_...men have wasted away before it, not knowing if what they have seen is real, or even possible..._" so use it with caution for it gives no knowledge or truth.
 
 Of all of its deficiencies, the most notable is:
+* Using the _-path_ option could lead to significant security risks. By default, **erised** sets this option to point to the same directory in which is running and, when the _X-Erised-Response-File_ header is set, it will search recursively for a matching filename in the current directory and **all** subdirectories underneath, returning the contents of the first match. For example, if you set this value to your root directory (_-path=/_) **erised** will scan the entire volume for a match
 * https protocol is not yet supported
 
 I may or may not address this in a future release. Caveat Emptor
