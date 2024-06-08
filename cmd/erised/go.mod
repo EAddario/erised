@@ -1,15 +1,19 @@
 module erised
 
-go 1.17
+go 1.22
 
 require (
 	github.com/franela/goblin v0.0.0-20211003143422-0a4f594942bf
-	github.com/onsi/gomega v1.18.1
-	github.com/rs/zerolog v1.26.1
+	github.com/onsi/gomega v1.33.1
+	github.com/rs/zerolog v1.33.0
 )
 
 require (
-	golang.org/x/net v0.0.0-20210805182204-aaa1db679c0d // indirect
-	golang.org/x/text v0.3.6 // indirect
-	gopkg.in/yaml.v2 v2.4.0 // indirect
+	github.com/google/go-cmp v0.6.0 // indirect
+	github.com/mattn/go-colorable v0.1.13 // indirect
+	github.com/mattn/go-isatty v0.0.20 // indirect
+	golang.org/x/net v0.26.0 // indirect
+	golang.org/x/sys v0.21.0 // indirect
+	golang.org/x/text v0.16.0 // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

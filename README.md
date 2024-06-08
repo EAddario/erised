@@ -104,6 +104,7 @@ NetworkAuthenticationRequired or 511
 Any other value will resolve to 200 (OK)
 
 # Release History
+* v0.5.4 - Update dependencies
 * v0.5.3 - Add file based responses
 * v0.4.1 - Add route concurrency, update tests and dependencies
 * v0.3.4 - Add [gomega](https://onsi.github.io/gomega/) assertion library, refactor tests to use Ω assertions and minor bug fixes
