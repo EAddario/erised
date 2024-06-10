@@ -205,9 +205,16 @@ func (s *server) handleShutdown() http.HandlerFunc {
 
 		s.respond(res, encodingJSON, 0, "{\"shutdown\":\"ok\"}")
 
-		if err := s.cfg.Shutdown(context.Background()); err != nil {
+		shutdownCtx, shutdownRelease := context.WithTimeout(context.Background(), 1*time.Millisecond)
+
+		if err := s.cfg.Shutdown(shutdownCtx); !errors.Is(err, context.DeadlineExceeded) {
 			log.Error().Msg(err.Error())
 		}
+
+		defer func() {
+			log.Info().Msg("Initiating server shutdown")
+			shutdownRelease()
+		}()
 
 		log.Debug().Msg("leaving handleShutdown")
 	}
