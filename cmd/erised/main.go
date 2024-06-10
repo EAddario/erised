@@ -136,6 +136,7 @@ func main() {
 
 	defer func() {
 		log.Log().Msg("erised server shutting down")
+		time.Sleep(100 * time.Millisecond)
 	}()
 
 	log.Debug().Msg("leaving main")
