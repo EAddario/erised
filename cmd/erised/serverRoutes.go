@@ -3,8 +3,8 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -80,7 +80,7 @@ func (s *server) handleLanding() http.HandlerFunc {
 				}
 
 				if !info.IsDir() && filepath.Base(path) == fn {
-					if ct, err := ioutil.ReadFile(path); err != nil {
+					if ct, err := os.ReadFile(path); err != nil {
 						log.Error().Msg("Unable to open the file: " + path)
 					} else {
 						data = string(ct)
@@ -114,6 +114,12 @@ func (s *server) handleHeaders() http.HandlerFunc {
 			Str("host", req.Host).
 			Str("uri", req.RequestURI).
 			Msg("handleHeaders")
+
+		if req.Method != http.MethodGet {
+			log.Error().Msg("Method " + req.Method + " not allowed for /erised/headers")
+			http.Error(res, "Method Not Allowed", http.StatusMethodNotAllowed)
+			return
+		}
 
 		res.Header().Set("Content-Type", "application/json")
 		data := "{"
@@ -150,6 +156,12 @@ func (s *server) handleInfo() http.HandlerFunc {
 			Str("uri", req.RequestURI).
 			Msg("handleInfo")
 
+		if req.Method != http.MethodGet {
+			log.Error().Msg("Method " + req.Method + " not allowed for /erised/info")
+			http.Error(res, "Method Not Allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
 		res.Header().Set("Content-Type", "application/json")
 
 		data := "{"
@@ -177,6 +189,12 @@ func (s *server) handleIP() http.HandlerFunc {
 			Str("uri", req.RequestURI).
 			Msg("handleIP")
 
+		if req.Method != http.MethodGet {
+			log.Error().Msg("Method " + req.Method + " not allowed for /erised/ip")
+			http.Error(res, "Method Not Allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
 		res.Header().Set("Content-Type", "application/json")
 
 		data := "{"
@@ -200,6 +218,12 @@ func (s *server) handleShutdown() http.HandlerFunc {
 			Str("host", req.Host).
 			Str("uri", req.RequestURI).
 			Msg("handleShutdown")
+
+		if req.Method != http.MethodPost {
+			log.Error().Msg("Method " + req.Method + " not allowed for /erised/shutdown")
+			http.Error(res, "Method Not Allowed", http.StatusMethodNotAllowed)
+			return
+		}
 
 		res.Header().Set("Content-Type", "application/json")
 

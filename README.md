@@ -23,16 +23,16 @@ Parameters:
 
 For help type **erised -h**
 
-Upon executing **erised** with no parameters, the server will listen on port **8080** for incoming http requests.
+When executing **erised** with no parameters, the server will listen on port **8080** for incoming http requests.
 
-When using the _-path_ option, please **EXERCISE GREAT CAUTION** choosing the path to search. See **Known Issues** for more information.
+If you're using the _-path_ option, please **EXERCISE GREAT CAUTION** when setting the path to search. See **Known Issues** for more information.
 
 The latest version is also available as a Docker image at [edaddario/erised](https://hub.docker.com/r/edaddario/erised).
 
-To start the server in a docker container, with defaults values, exceute the following command:
+To start the server in a docker container, with defaults values, execute the following command:
 
 ```sh
-docker run --rm -p 8080:8080 edaddario/erised
+docker run --rm -p 8080:8080 --name erised edaddario/erised
 ```
 
 If you would like to return file based responses (_X-Erised-Response-File_ set) when using the docker image, you'll need to map the directory containing your local files and set the _-path_ option accordingly.
@@ -40,31 +40,31 @@ If you would like to return file based responses (_X-Erised-Response-File_ set) 
 The following example maps the **/local_directory/response_files** directory in your local machine to **/files** in the docker image, and then sets the **-path** option:
 
 ```sh
-docker run --rm -p 8080:8080 -v /local_directory/response_files:/files edaddario/erised -path ./files
+docker run --rm -p 8080:8080 --name erised -v /local_directory/response_files:/files edaddario/erised -path ./files
 ```
 
-HTTP methods (e.g. GET, POST, PATCH, etc.), query strings and body are **ignored**. URL routes are also ignored, except for:
+URL routes, HTTP methods (e.g. GET, POST, PATCH, etc.), query strings and body are **ignored**, except for:
 
-|Name|Purpose|
-|--|--|
-|erised/headers|Returns request headers|
-|erised/info|Returns miscellaneous information|
-|erised/ip|Returns the client IP|
-|erised/shutdown|Shutdowns the server|
+| Name            | Method | Purpose                           |
+|-----------------|--------|-----------------------------------|
+| erised/headers  | GET    | Returns request headers           |
+| erised/info     | GET    | Returns miscellaneous information |
+| erised/ip       | GET    | Returns the client IP             |
+| erised/shutdown | POST   | Shutdowns the server              |
 
 Response behaviour is controlled via custom headers in the http request:
 
-|Name|Purpose|
-|--|--|
-|X-Erised-Content-Type|Sets the response _Content-Type_. Valid values are **text** (default) for _text/plain_, **json** for _application/json_, **xml** for _application/xml_ and **gzip** for _application/octet-stream_. When using **gzip**, _Content-Encoding_ is also set to **gzip** and the response body is compressed accordingly.|
-|X-Erised-Data|Returns the **same** value in the response body|
-|X-Erised-Headers|Returns the value(s) in the response header. Values **must** be in a JSON key/value list|
-|X-Erised-Location|Sets the response _Location_ to the new (redirected) URL or path, when 300 ≤ _X-Erised-Status-Code_ < 310|
-|X-Erised-Response-Delay|Number of **milliseconds** to wait before sending response back to client|
-|X-Erised-Response-File|Returns the contents of **file** in the response body. If present, _X-Erised-Data_ is ignored|
-|X-Erised-Status-Code|Sets the HTTP Status Code|
+| Name                    | Purpose                                                                                                                                                                                                                                                                                                              |
+|-------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| X-Erised-Content-Type   | Sets the response _Content-Type_. Valid values are **text** (default) for _text/plain_, **json** for _application/json_, **xml** for _application/xml_ and **gzip** for _application/octet-stream_. When using **gzip**, _Content-Encoding_ is also set to **gzip** and the response body is compressed accordingly. |
+| X-Erised-Data           | Returns the **same** value in the response body                                                                                                                                                                                                                                                                      |
+| X-Erised-Headers        | Returns the value(s) in the response header. Values **must** be in a JSON key/value list                                                                                                                                                                                                                             |
+| X-Erised-Location       | Sets the response _Location_ to the new (redirected) URL or path, when 300 ≤ _X-Erised-Status-Code_ < 310                                                                                                                                                                                                            |
+| X-Erised-Response-Delay | Number of **milliseconds** to wait before sending response back to client                                                                                                                                                                                                                                            |
+| X-Erised-Response-File  | Returns the contents of **file** in the response body. If present, _X-Erised-Data_ is ignored                                                                                                                                                                                                                        |
+| X-Erised-Status-Code    | Sets the HTTP Status Code                                                                                                                                                                                                                                                                                            |
 
-By design, no validation is performed on _X-Erised-Data_ or _X-Erised-Location_.
+No validation is performed on _X-Erised-Data_ or _X-Erised-Location_.
 
 Valid _X-Erised-Status-Code_ values are:
 ```text
@@ -104,6 +104,7 @@ NetworkAuthenticationRequired or 511
 Any other value will resolve to 200 (OK)
 
 # Release History
+* v0.6.7 - Improve server shutdown handling, and restrict allowed methods for _erised/headers_, _erised/ip_, _erised/info_ and _erised/shutdown_ routes  
 * v0.5.4 - Update dependencies
 * v0.5.3 - Add file based responses
 * v0.4.1 - Add route concurrency, update tests and dependencies
@@ -117,20 +118,20 @@ Any other value will resolve to 200 (OK)
 * v0.0.1 - Initial release
 
 # Known Issues
-**erised** is full of bugs and "_...men have wasted away before it, not knowing if what they have seen is real, or even possible..._" so use it with caution for it gives no knowledge or truth.
+**erised** may be full of bugs. Poeple "_... have wasted away before it, not knowing if what they have seen is real, or even possible..._" so, use it with caution for it gives no knowledge or truth.
 
 Of all of its deficiencies, the most notable is:
 * Using the _-path_ option could lead to significant security risks. By default, **erised** sets this option to point to the same directory in which is running and, when the _X-Erised-Response-File_ header is set, it will search recursively for a matching filename in the current directory and **all** subdirectories underneath, returning the contents of the first match. For example, if you set this value to your root directory (_-path=/_) **erised** will scan the entire volume for a match
 * https protocol is not yet supported
 
-I may or may not address this in a future release. Caveat Emptor
+I may or may not address these issues in a future release. Caveat Emptor
 
 # Motivation
-When developing and testing REST based API clients, sooner or later I'd come across situations where I needed a quick and easy way to dynamically test endpoint's responses under different scenarios. Although there are many excellent frameworks and mock servers available, the time and effort required to configure them is sometimes not justified, specially if the application under test provides 10's or 100's of routes, so after some brief and unsuccessful googling I decided to create my own.
+When developing and testing REST API clients, sooner or later I'd come across situations where I needed a quick and easy way to dynamically test endpoint's responses under different scenarios. Although there are many excellent frameworks and mock servers available, the time and effort required to configure them is sometimes not justified, specially if the application under test exposes many routes, so after some brief and unsuccessful googling I decided to create my own.
 
-**erised** was inspired somewhat by [Kenneth Reitz's](https://kennethreitz.org/) HTTP Request & Response Service [httpbin.io](https://httpbin.org/) and it may offer similar functionality in future releases.
+**erised** was inspired by [Kenneth Reitz's](https://kennethreitz.org/) HTTP Request & Response Service [httpbin.io](https://httpbin.org/) and it may offer similar functionality in future releases.
 
-The typical use case is to get a response to an arbitrary http request where the content of the body has a predetermined value and your ability to control the server's behaviour is limited or non-existent.
+The typical use case is to get a response to an arbitrary http request when your ability to control the server's behaviour is limited or non-existent.
 
 Imagine you're developing some client for [api.chucknorris.io](https://api.chucknorris.io/) and want to test the **/jokes/random** path. You could certainly make live calls against the server:
 ```sh
@@ -155,7 +156,7 @@ curl -w '\n' -v -k https://api.chucknorris.io/jokes/random
 * Closing connection 0
 ```
 
-**Or**, better yet, you could use **erised** like this:
+**Or**, even better yet, you could use **erised** like this:
 ```sh
 curl -w '\n' -v \
 -H "X-Erised-Status-Code:OK" \
@@ -186,7 +187,7 @@ http://localhost:8080/jokes/random
 * Closing connection 0
 ```
 
-**and** also to test some common failures like,
+**and** even simulate common failures like,
 ```sh
 curl -w '\n' -v \
 -H "X-Erised-Status-Code:NotFound" \

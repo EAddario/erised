@@ -17,20 +17,37 @@ func TestErisedInfoRoute(t *testing.T) {
 	RegisterFailHandler(func(m string, _ ...int) { g.Fail(m) })
 	exp := `{"Host":"localhost:8080","Method":"GET","Protocol":"HTTP/1.1","Request URI":"http://localhost:8080/erised/info"}`
 	svr := server{}
-	req := httptest.NewRequest(http.MethodGet, "http://localhost:8080/erised/info", nil)
-	res := httptest.NewRecorder()
-	svr.handleInfo().ServeHTTP(res, req)
 
 	g.Describe("Test erised/info", func() {
 		g.It("Should return StatusOK", func() {
+			res := httptest.NewRecorder()
+			req := httptest.NewRequest(http.MethodGet, "http://localhost:8080/erised/info", nil)
+			svr.handleInfo().ServeHTTP(res, req)
+
 			Ω(res.Code).Should(Equal(http.StatusOK))
 		})
 
+		g.It("Should return MethodNotAllowed", func() {
+			res := httptest.NewRecorder()
+			req := httptest.NewRequest(http.MethodPost, "http://localhost:8080/erised/info", nil)
+			svr.handleInfo().ServeHTTP(res, req)
+
+			Ω(res.Code).Should(Equal(http.StatusMethodNotAllowed))
+		})
+
 		g.It("Should match expected body", func() {
+			res := httptest.NewRecorder()
+			req := httptest.NewRequest(http.MethodGet, "http://localhost:8080/erised/info", nil)
+			svr.handleInfo().ServeHTTP(res, req)
+
 			Ω(res.Body.String()).Should(Equal(exp))
 		})
 
 		g.It("Should match Content-Type header", func() {
+			res := httptest.NewRecorder()
+			req := httptest.NewRequest(http.MethodGet, "http://localhost:8080/erised/info", nil)
+			svr.handleInfo().ServeHTTP(res, req)
+
 			Ω(res.Header().Get("Content-Type")).Should(Equal("application/json"))
 		})
 	})
@@ -42,20 +59,37 @@ func TestErisedIPRoute(t *testing.T) {
 	RegisterFailHandler(func(m string, _ ...int) { g.Fail(m) })
 	exp := `{"Client IP":"192.0.2.1:1234"}`
 	svr := server{}
-	req := httptest.NewRequest(http.MethodGet, "http://localhost:8080/erised/ip", nil)
-	res := httptest.NewRecorder()
-	svr.handleIP().ServeHTTP(res, req)
 
 	g.Describe("Test erised/ip", func() {
 		g.It("Should return StatusOK", func() {
+			res := httptest.NewRecorder()
+			req := httptest.NewRequest(http.MethodGet, "http://localhost:8080/erised/ip", nil)
+			svr.handleIP().ServeHTTP(res, req)
+
 			Ω(res.Code).Should(Equal(http.StatusOK))
 		})
 
+		g.It("Should return MethodNotAllowed", func() {
+			res := httptest.NewRecorder()
+			req := httptest.NewRequest(http.MethodPost, "http://localhost:8080/erised/ip", nil)
+			svr.handleIP().ServeHTTP(res, req)
+
+			Ω(res.Code).Should(Equal(http.StatusMethodNotAllowed))
+		})
+
 		g.It("Should match expected body", func() {
+			res := httptest.NewRecorder()
+			req := httptest.NewRequest(http.MethodGet, "http://localhost:8080/erised/ip", nil)
+			svr.handleIP().ServeHTTP(res, req)
+
 			Ω(res.Body.String()).Should(Equal(exp))
 		})
 
 		g.It("Should match Content-Type header", func() {
+			res := httptest.NewRecorder()
+			req := httptest.NewRequest(http.MethodGet, "http://localhost:8080/erised/ip", nil)
+			svr.handleIP().ServeHTTP(res, req)
+
 			Ω(res.Header().Get("Content-Type")).Should(Equal("application/json"))
 		})
 	})
@@ -67,21 +101,55 @@ func TestErisedHeadersRoute(t *testing.T) {
 	RegisterFailHandler(func(m string, _ ...int) { g.Fail(m) })
 	exp := `{"Host":"localhost:8080"}`
 	svr := server{}
-	req := httptest.NewRequest(http.MethodGet, "http://localhost:8080/erised/headers", nil)
-	res := httptest.NewRecorder()
-	svr.handleHeaders().ServeHTTP(res, req)
 
 	g.Describe("Test erised/headers", func() {
 		g.It("Should return StatusOK", func() {
+			res := httptest.NewRecorder()
+			req := httptest.NewRequest(http.MethodGet, "http://localhost:8080/erised/headers", nil)
+			svr.handleHeaders().ServeHTTP(res, req)
+
 			Ω(res.Code).Should(Equal(http.StatusOK))
 		})
 
+		g.It("Should return MethodNotAllowed", func() {
+			res := httptest.NewRecorder()
+			req := httptest.NewRequest(http.MethodPost, "http://localhost:8080/erised/headers", nil)
+			svr.handleHeaders().ServeHTTP(res, req)
+
+			Ω(res.Code).Should(Equal(http.StatusMethodNotAllowed))
+		})
+
 		g.It("Should match expected body", func() {
+			res := httptest.NewRecorder()
+			req := httptest.NewRequest(http.MethodGet, "http://localhost:8080/erised/headers", nil)
+			svr.handleHeaders().ServeHTTP(res, req)
+
 			Ω(res.Body.String()).Should(Equal(exp))
 		})
 
 		g.It("Should match Content-Type header", func() {
+			res := httptest.NewRecorder()
+			req := httptest.NewRequest(http.MethodGet, "http://localhost:8080/erised/headers", nil)
+			svr.handleHeaders().ServeHTTP(res, req)
+
 			Ω(res.Header().Get("Content-Type")).Should(Equal("application/json"))
+		})
+	})
+}
+
+func TestErisedShutdownRoute(t *testing.T) {
+	zerolog.SetGlobalLevel(zerolog.Disabled)
+	g := goblin.Goblin(t)
+	RegisterFailHandler(func(m string, _ ...int) { g.Fail(m) })
+	svr := server{}
+
+	g.Describe("Test erised/shutdown", func() {
+		g.It("Should return MethodNotAllowed", func() {
+			res := httptest.NewRecorder()
+			req := httptest.NewRequest(http.MethodPost, "http://localhost:8080/erised/shutdown", nil)
+			svr.handleHeaders().ServeHTTP(res, req)
+
+			Ω(res.Code).Should(Equal(http.StatusMethodNotAllowed))
 		})
 	})
 }
