@@ -37,7 +37,7 @@ func (s *server) handleLanding() http.HandlerFunc {
 			Str("method", req.Method).
 			Str("host", req.Host).
 			Str("uri", req.RequestURI).
-			Str("searchPath", *s.pth).
+			Str("searchPath", s.pth).
 			Msg("handleLanding")
 
 		delay := time.Duration(0)
@@ -72,7 +72,7 @@ func (s *server) handleLanding() http.HandlerFunc {
 		data := ""
 		if fn := req.Header.Get("X-Erised-Response-File"); fn != "" {
 
-			err := filepath.Walk(*s.pth, func(path string, info os.FileInfo, err error) error {
+			err := filepath.Walk(s.pth, func(path string, info os.FileInfo, err error) error {
 
 				if err != nil {
 					log.Error().Msg("Invalid path: " + path)

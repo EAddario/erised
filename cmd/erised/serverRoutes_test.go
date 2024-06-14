@@ -159,7 +159,7 @@ func TestErisedLandingRoute(t *testing.T) {
 	g := goblin.Goblin(t)
 	RegisterFailHandler(func(m string, _ ...int) { g.Fail(m) })
 	path := "."
-	svr := server{pth: &path}
+	svr := server{pth: path}
 
 	g.Describe("Test /", func() {
 		g.It("Should return StatusOK", func() {
