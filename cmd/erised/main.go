@@ -3,15 +3,13 @@ package main
 import (
 	"errors"
 	"flag"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	"net/http"
 	"os"
 	"os/signal"
 	"strings"
 	"syscall"
-	"time"
-
-	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
 )
 
 const version = "v0.6.7"
@@ -51,29 +49,28 @@ func main() {
 
 	go func() {
 		sigChan := make(chan os.Signal, 1)
-		signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
+		signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT, syscall.SIGHUP)
 		<-sigChan
 
-		if err := srv.cfg.Close(); err != nil {
-			log.Fatal().Msg("HTTP close error: " + err.Error())
+		srv.stp()
+	}()
+
+	go func() {
+		if err := srv.cfg.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
+			log.Error().Msg(err.Error())
 		}
 	}()
 
-	if err := srv.cfg.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
-		switch {
-		case errors.Is(err, http.ErrServerClosed):
-			log.Warn().Msg(err.Error())
-		case errors.Is(err, http.ErrBodyReadAfterClose), errors.Is(err, http.ErrHandlerTimeout), errors.Is(err, http.ErrLineTooLong):
+	select {
+	case <-srv.ctx.Done():
+		if err := srv.cfg.Shutdown(srv.ctx); err != nil {
 			log.Error().Msg(err.Error())
-		default:
-			log.Fatal().Msg(err.Error())
 		}
 	}
 
+	log.Debug().Msg("leaving main")
+
 	defer func() {
 		log.Log().Msg("erised server shutting down")
-		time.Sleep(100 * time.Millisecond)
 	}()
-
-	log.Debug().Msg("leaving main")
 }

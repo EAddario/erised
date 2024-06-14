@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"github.com/gorilla/mux"
 	"github.com/rs/zerolog/log"
 	"net/http"
@@ -11,6 +12,8 @@ import (
 type server struct {
 	mux *mux.Router
 	cfg *http.Server
+	ctx context.Context
+	stp context.CancelFunc
 	pth string
 }
 
@@ -26,6 +29,7 @@ func newServer(port, read, write, idle int, path string) *server {
 		WriteTimeout: time.Duration(write) * time.Second,
 		IdleTimeout:  time.Duration(idle) * time.Second,
 	}
+	s.ctx, s.stp = context.WithCancel(context.Background())
 	s.pth = path
 	s.routes()
 

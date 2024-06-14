@@ -1,9 +1,7 @@
 package main
 
 import (
-	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
 	"os"
@@ -226,20 +224,9 @@ func (s *server) handleShutdown() http.HandlerFunc {
 		}
 
 		res.Header().Set("Content-Type", "application/json")
-
 		s.respond(res, encodingJSON, 0, "{\"shutdown\":\"ok\"}")
-
-		shutdownCtx, shutdownRelease := context.WithTimeout(context.Background(), 1*time.Millisecond)
-
-		if err := s.cfg.Shutdown(shutdownCtx); !errors.Is(err, context.DeadlineExceeded) {
-			log.Error().Msg(err.Error())
-		}
-
-		defer func() {
-			log.Info().Msg("Initiating server shutdown")
-			shutdownRelease()
-		}()
-
+		log.Info().Msg("Initiating server shutdown")
+		s.stp()
 		log.Debug().Msg("leaving handleShutdown")
 	}
 }
