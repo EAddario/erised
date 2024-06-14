@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"github.com/gorilla/mux"
 	"github.com/rs/zerolog/log"
 	"net/http"
 	"strconv"
@@ -10,7 +9,7 @@ import (
 )
 
 type server struct {
-	mux *mux.Router
+	mux *http.ServeMux
 	cfg *http.Server
 	ctx context.Context
 	stp context.CancelFunc
@@ -21,7 +20,7 @@ func newServer(port, read, write, idle int, path string) *server {
 	log.Debug().Msg("entering newServer")
 
 	s := &server{}
-	s.mux = mux.NewRouter()
+	s.mux = &http.ServeMux{}
 	s.cfg = &http.Server{
 		Addr:         ":" + strconv.Itoa(port),
 		Handler:      s.mux,

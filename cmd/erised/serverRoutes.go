@@ -17,10 +17,10 @@ func (s *server) routes() {
 	log.Debug().Msg("entering routes")
 
 	go s.mux.HandleFunc("/", s.handleLanding())
-	go s.mux.HandleFunc("/erised/headers", s.handleHeaders()).Methods(http.MethodGet)
-	go s.mux.HandleFunc("/erised/info", s.handleInfo()).Methods(http.MethodGet)
-	go s.mux.HandleFunc("/erised/ip", s.handleIP()).Methods(http.MethodGet)
-	go s.mux.HandleFunc("/erised/shutdown", s.handleShutdown()).Methods(http.MethodPost)
+	go s.mux.HandleFunc("/erised/headers", s.handleHeaders())
+	go s.mux.HandleFunc("/erised/info", s.handleInfo())
+	go s.mux.HandleFunc("/erised/ip", s.handleIP())
+	go s.mux.HandleFunc("/erised/shutdown", s.handleShutdown())
 
 	log.Debug().Msg("leaving routes")
 }
