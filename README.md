@@ -104,6 +104,7 @@ NetworkAuthenticationRequired or 511
 Any other value will resolve to 200 (OK)
 
 # Release History
+* v0.6.11 - Further server shutdown improvements, minor efficiency improvements, general code refactoring and bug fixes
 * v0.6.7 - Improve server shutdown handling, and restrict allowed methods for _erised/headers_, _erised/ip_, _erised/info_ and _erised/shutdown_ routes  
 * v0.5.4 - Update dependencies
 * v0.5.3 - Add file based responses

@@ -12,7 +12,7 @@ import (
 	"syscall"
 )
 
-const version = "v0.6.7"
+const version = "v0.6.11"
 
 func main() {
 	log.Debug().Msg("entering main")
