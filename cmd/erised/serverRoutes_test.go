@@ -146,8 +146,8 @@ func TestErisedShutdownRoute(t *testing.T) {
 	g.Describe("Test erised/shutdown", func() {
 		g.It("Should return MethodNotAllowed", func() {
 			res := httptest.NewRecorder()
-			req := httptest.NewRequest(http.MethodPost, "http://localhost:8080/erised/shutdown", nil)
-			svr.handleHeaders().ServeHTTP(res, req)
+			req := httptest.NewRequest(http.MethodGet, "http://localhost:8080/erised/shutdown", nil)
+			svr.handleShutdown().ServeHTTP(res, req)
 
 			Ω(res.Code).Should(Equal(http.StatusMethodNotAllowed))
 		})
@@ -253,7 +253,7 @@ func TestErisedLandingRoute(t *testing.T) {
 		})
 
 		g.It("Should return serverRoutes_test.json file content in body", func() {
-			exp := `{"Name":"serverRoutes_test"}`
+			exp := `{"Name":"serverRoutes_test"}` + "\n"
 			res := httptest.NewRecorder()
 			req := httptest.NewRequest(http.MethodGet, "http://localhost:8080/", nil)
 			req.Header.Set("X-Erised-Content-Type", "json")
