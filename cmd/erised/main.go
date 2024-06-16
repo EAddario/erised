@@ -69,6 +69,6 @@ func main() {
 	log.Debug().Msg("leaving main")
 
 	defer func() {
-		log.Log().Msg("erised server shutting down")
+		log.Info().Msg("erised server shutting down")
 	}()
 }

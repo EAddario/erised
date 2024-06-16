@@ -2,10 +2,11 @@ package main
 
 import (
 	"context"
-	"github.com/rs/zerolog/log"
 	"net/http"
 	"strconv"
 	"time"
+
+	"github.com/rs/zerolog/log"
 )
 
 type server struct {
@@ -32,7 +33,7 @@ func newServer(port, read, write, idle int, path string) *server {
 	s.ctx, s.stp = context.WithCancel(context.Background())
 	s.pth = path
 	s.routes()
-	log.Log().
+	log.Info().
 		Str("version", version).
 		Int("port", port).
 		Str("readTimeout", s.cfg.ReadTimeout.String()).
