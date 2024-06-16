@@ -25,14 +25,14 @@ For help type **erised -h**
 
 When executing **erised** with no parameters, the server will listen on port **8080** for incoming http requests.
 
-If you're using the _-path_ option, please **EXERCISE GREAT CAUTION** when setting the path to search. See **Known Issues** for more information.
+If you're using the _-path_ option, please **EXERCISE GREAT CAUTION** when setting the path to search. See **Known Issues** for more information. For security reasons, path is restricted to the directory or subdirectories where the program was invoked.
 
 The latest version is also available as a Docker image at [edaddario/erised](https://hub.docker.com/r/edaddario/erised).
 
 To start the server in a docker container, with defaults values, execute the following command:
 
 ```sh
-docker run --rm -p 8080:8080 --name erised edaddario/erised
+docker run --rm -p 8080:8080 --name erised edaddario/erised [flags]
 ```
 
 If you would like to return file based responses (_X-Erised-Response-File_ set) when using the docker image, you'll need to map the directory containing your local files and set the _-path_ option accordingly.
@@ -104,6 +104,7 @@ NetworkAuthenticationRequired or 511
 Any other value will resolve to 200 (OK)
 
 # Release History
+* v0.7.0 - Improve response file processing and security, change logging type, and minor source code readability changes
 * v0.6.11 - Further server shutdown improvements, minor efficiency improvements, general code refactoring and bug fixes
 * v0.6.7 - Improve server shutdown handling, and restrict allowed methods for _erised/headers_, _erised/ip_, _erised/info_ and _erised/shutdown_ routes  
 * v0.5.4 - Update dependencies
@@ -122,7 +123,7 @@ Any other value will resolve to 200 (OK)
 **erised** may be full of bugs. Poeple "_... have wasted away before it, not knowing if what they have seen is real, or even possible..._" so, use it with caution for it gives no knowledge or truth.
 
 Of all of its deficiencies, the most notable is:
-* Using the _-path_ option could lead to significant security risks. By default, **erised** sets this option to point to the same directory in which is running and, when the _X-Erised-Response-File_ header is set, it will search recursively for a matching filename in the current directory and **all** subdirectories underneath, returning the contents of the first match. For example, if you set this value to your root directory (_-path=/_) **erised** will scan the entire volume for a match
+* Using the _-path_ option could lead to significant security risks. When the _X-Erised-Response-File_ header is set it will search recursively for a matching filename in the current directory or **all** subdirectories underneath, returning the contents of the first match. For security reasons, path is restricted to the directory or subdirectories where the program was invoked.
 * https protocol is not yet supported
 
 I may or may not address these issues in a future release. Caveat Emptor

@@ -13,7 +13,7 @@ import (
 	"syscall"
 )
 
-const version = "v0.6.11"
+const version = "v0.7.0"
 
 func main() {
 	cd, err := os.Getwd()
