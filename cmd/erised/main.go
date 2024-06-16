@@ -16,7 +16,6 @@ const version = "v0.6.11"
 
 func main() {
 	log.Debug().Msg("entering main")
-
 	pt := flag.Int("port", 8080, "port to listen")
 	rt := flag.Int("read", 5, "maximum duration in seconds for reading the entire request")
 	wt := flag.Int("write", 10, "maximum duration in seconds before timing out response writes")
@@ -24,7 +23,6 @@ func main() {
 	lv := flag.String("level", "info", "one of debug/info/warn/error/off")
 	lf := flag.Bool("json", false, "use JSON log format")
 	ph := flag.String("path", ".", "path to search recursively for X-Erised-Response-File")
-
 	setupFlags(flag.CommandLine)
 	flag.Parse()
 

@@ -15,13 +15,11 @@ import (
 
 func (s *server) routes() {
 	log.Debug().Msg("entering routes")
-
 	go s.mux.HandleFunc("/", s.handleLanding())
 	go s.mux.HandleFunc("/erised/headers", s.handleHeaders())
 	go s.mux.HandleFunc("/erised/info", s.handleInfo())
 	go s.mux.HandleFunc("/erised/ip", s.handleIP())
 	go s.mux.HandleFunc("/erised/shutdown", s.handleShutdown())
-
 	log.Debug().Msg("leaving routes")
 }
 
@@ -37,10 +35,8 @@ func (s *server) handleLanding() http.HandlerFunc {
 			Str("uri", req.RequestURI).
 			Str("searchPath", s.pth).
 			Msg("handleLanding")
-
 		delay := time.Duration(0)
 		enc, ct, ce := encoding(req.Header.Get("X-Erised-Content-Type"))
-
 		res.Header().Set("Content-Type", ct)
 		res.Header().Set("Content-Encoding", ce)
 
@@ -66,10 +62,9 @@ func (s *server) handleLanding() http.HandlerFunc {
 		}
 
 		res.WriteHeader(sc)
-
 		data := ""
-		if fn := req.Header.Get("X-Erised-Response-File"); fn != "" {
 
+		if fn := req.Header.Get("X-Erised-Response-File"); fn != "" {
 			err := filepath.Walk(s.pth, func(path string, info os.FileInfo, err error) error {
 
 				if err != nil {
@@ -91,12 +86,11 @@ func (s *server) handleLanding() http.HandlerFunc {
 			if data == "" || err != nil {
 				log.Error().Msg("File not found: " + fn)
 			}
-
 		} else {
 			data = req.Header.Get("X-Erised-Data")
 		}
-		s.respond(res, enc, delay, data)
 
+		s.respond(res, enc, delay, data)
 		log.Debug().Msg("leaving handleLanding")
 	}
 }
@@ -137,7 +131,6 @@ func (s *server) handleHeaders() http.HandlerFunc {
 		data += "\"Host\":\"" + req.Host + "\""
 		data += "}"
 		s.respond(res, encodingJSON, 0, data)
-
 		log.Debug().Msg("leaving handleHeaders")
 	}
 }
@@ -161,16 +154,13 @@ func (s *server) handleInfo() http.HandlerFunc {
 		}
 
 		res.Header().Set("Content-Type", "application/json")
-
 		data := "{"
 		data += "\"Host\":\"" + req.Host + "\","
 		data += "\"Method\":\"" + req.Method + "\","
 		data += "\"Protocol\":\"" + req.Proto + "\","
 		data += "\"Request URI\":\"" + req.RequestURI + "\""
 		data += "}"
-
 		s.respond(res, encodingJSON, 0, data)
-
 		log.Debug().Msg("leaving handleInfo")
 	}
 }
@@ -194,13 +184,10 @@ func (s *server) handleIP() http.HandlerFunc {
 		}
 
 		res.Header().Set("Content-Type", "application/json")
-
 		data := "{"
 		data += "\"Client IP\":\"" + req.RemoteAddr + "\""
 		data += "}"
-
 		s.respond(res, encodingJSON, 0, data)
-
 		log.Debug().Msg("leaving handleIP")
 	}
 }

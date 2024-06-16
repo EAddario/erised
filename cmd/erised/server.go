@@ -18,9 +18,9 @@ type server struct {
 
 func newServer(port, read, write, idle int, path string) *server {
 	log.Debug().Msg("entering newServer")
-
 	s := &server{}
 	s.mux = &http.ServeMux{}
+
 	s.cfg = &http.Server{
 		Addr:         ":" + strconv.Itoa(port),
 		Handler:      s.mux,
@@ -28,10 +28,10 @@ func newServer(port, read, write, idle int, path string) *server {
 		WriteTimeout: time.Duration(write) * time.Second,
 		IdleTimeout:  time.Duration(idle) * time.Second,
 	}
+
 	s.ctx, s.stp = context.WithCancel(context.Background())
 	s.pth = path
 	s.routes()
-
 	log.Log().
 		Str("version", version).
 		Int("port", port).
@@ -40,7 +40,6 @@ func newServer(port, read, write, idle int, path string) *server {
 		Str("idleTimeout", s.cfg.IdleTimeout.String()).
 		Str("path", path).
 		Msg("erised server running")
-
 	log.Debug().Msg("leaving newServer")
 	return s
 }

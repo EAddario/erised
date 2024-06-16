@@ -46,7 +46,6 @@ func httpStatusCode(code string) int {
 		return 307
 	case "PermanentRedirect", "308":
 		return 308
-
 	case "BadRequest", "400":
 		return 400
 	case "Unauthorized", "401":
@@ -69,7 +68,6 @@ func httpStatusCode(code string) int {
 		return 418
 	case "TooManyRequests", "429":
 		return 429
-
 	case "InternalServerError", "500":
 		return 500
 	case "NotImplemented", "501":
