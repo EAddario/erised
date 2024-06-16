@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"strings"
 	"syscall"
 )
@@ -15,6 +16,12 @@ import (
 const version = "v0.6.11"
 
 func main() {
+	cd, err := os.Getwd()
+
+	if err != nil {
+		panic("Unable to get current directory. Program will terminate.")
+	}
+
 	log.Debug().Msg("entering main")
 	pt := flag.Int("port", 8080, "port to listen")
 	rt := flag.Int("read", 5, "maximum duration in seconds for reading the entire request")
@@ -22,7 +29,7 @@ func main() {
 	it := flag.Int("idle", 120, "maximum time in seconds to wait for the next request when keep-alive is enabled")
 	lv := flag.String("level", "info", "one of debug/info/warn/error/off")
 	lf := flag.Bool("json", false, "use JSON log format")
-	ph := flag.String("path", ".", "path to search recursively for X-Erised-Response-File")
+	ph := flag.String("path", "", "path to search recursively for X-Erised-Response-File")
 	setupFlags(flag.CommandLine)
 	flag.Parse()
 
@@ -41,6 +48,10 @@ func main() {
 
 	if *lf {
 		log.Logger = zerolog.New(os.Stderr).With().Timestamp().Logger()
+	}
+
+	if *ph != "" {
+		*ph = filepath.Join(cd, *ph)
 	}
 
 	srv := newServer(*pt, *rt, *wt, *it, *ph)

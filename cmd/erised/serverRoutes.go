@@ -2,7 +2,9 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
+	"io/fs"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -36,18 +38,22 @@ func (s *server) handleLanding() http.HandlerFunc {
 			Str("searchPath", s.pth).
 			Msg("handleLanding")
 		delay := time.Duration(0)
-		enc, ct, ce := encoding(req.Header.Get("X-Erised-Content-Type"))
+		xct := req.Header.Get("X-Erised-Content-Type")
+		log.Debug().Msg("X-Erised-Content-Type: " + xct)
+		enc, ct, ce := encoding(xct)
 		res.Header().Set("Content-Type", ct)
 		res.Header().Set("Content-Encoding", ce)
 
 		if rd, err := strconv.Atoi(req.Header.Get("X-Erised-Response-Delay")); rd > 0 && err == nil {
 			delay = time.Duration(rd) * time.Millisecond
+			log.Debug().Msg("X-Erised-Response-Delay: " + delay.String())
 		}
 
-		hd := req.Header.Get("X-Erised-Headers")
+		xhd := req.Header.Get("X-Erised-Headers")
+		log.Debug().Msg("X-Erised-Headers: " + xhd)
 		var rs map[string]interface{}
 
-		if err := json.Unmarshal([]byte(hd), &rs); err == nil {
+		if err := json.Unmarshal([]byte(xhd), &rs); err == nil {
 			if len(rs) != 0 {
 				for k, v := range rs {
 					res.Header().Set(k, fmt.Sprintf("%v", v))
@@ -55,42 +61,63 @@ func (s *server) handleLanding() http.HandlerFunc {
 			}
 		}
 
-		sc := httpStatusCode(req.Header.Get("X-Erised-Status-Code"))
+		xsc := httpStatusCode(req.Header.Get("X-Erised-Status-Code"))
+		log.Debug().Msg("X-Erised-Status-Code: " + strconv.Itoa(xsc))
 
-		if sc >= 300 && sc < 310 {
-			res.Header().Set("Location", req.Header.Get("X-Erised-Location"))
+		if xsc >= 300 && xsc < 310 {
+			xloc := req.Header.Get("X-Erised-Location")
+			res.Header().Set("Location", xloc)
+			log.Debug().Msg("X-Erised-Location: " + xloc)
 		}
 
-		res.WriteHeader(sc)
-		data := ""
+		xdt := ""
 
-		if fn := req.Header.Get("X-Erised-Response-File"); fn != "" {
-			err := filepath.Walk(s.pth, func(path string, info os.FileInfo, err error) error {
+		if xrf := req.Header.Get("X-Erised-Response-File"); xrf != "" && s.pth != "" {
+			log.Debug().Msg("X-Erised-Response-File: " + xrf)
+			xsc = http.StatusNotFound
+
+			err := filepath.WalkDir(s.pth, func(path string, entry fs.DirEntry, err error) error {
 
 				if err != nil {
 					log.Error().Msg("Invalid path: " + path)
-					return nil
+					log.Debug().Msg(fmt.Sprintf("Error: %v", err))
+
+					return errors.New("INVALID_PATH_ERROR")
 				}
 
-				if !info.IsDir() && filepath.Base(path) == fn {
+				if !entry.IsDir() && filepath.Base(path) == xrf {
 					if ct, err := os.ReadFile(path); err != nil {
 						log.Error().Msg("Unable to open the file: " + path)
+						log.Debug().Msg(fmt.Sprintf("Error: %v", err))
+
+						return errors.New("FILE_ACCESS_ERROR")
 					} else {
-						data = string(ct)
+						log.Info().Msg(fmt.Sprintf("Reading file %v", path))
+						xdt = string(ct)
+
+						return errors.New("FILE_FOUND")
 					}
 				}
 
+				log.Debug().Msg("File " + xrf + " not found in " + path)
 				return nil
 			})
 
-			if data == "" || err != nil {
-				log.Error().Msg("File not found: " + fn)
+			switch fmt.Sprintf("%v", err) {
+			case "INVALID_PATH_ERROR":
+				xsc = http.StatusBadRequest
+			case "FILE_ACCESS_ERROR":
+				xsc = http.StatusInternalServerError
+			case "FILE_FOUND":
+				xsc = http.StatusOK
 			}
 		} else {
-			data = req.Header.Get("X-Erised-Data")
+			xdt = req.Header.Get("X-Erised-Data")
+			log.Debug().Msg("X-Erised-Data: " + xdt)
 		}
 
-		s.respond(res, enc, delay, data)
+		res.WriteHeader(xsc)
+		s.respond(res, enc, delay, xdt)
 		log.Debug().Msg("leaving handleLanding")
 	}
 }

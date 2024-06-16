@@ -266,6 +266,17 @@ func TestErisedLandingRoute(t *testing.T) {
 			Ω(res.Body.String()).Should(Equal(exp))
 		})
 
+		g.It("Should return StatusNotFound", func() {
+			res := httptest.NewRecorder()
+			req := httptest.NewRequest(http.MethodGet, "http://localhost:8080/", nil)
+			req.Header.Set("X-Erised-Content-Type", "json")
+			req.Header.Set("X-Erised-Response-File", "|file/:/cannot/:/exist|")
+			svr.handleLanding().ServeHTTP(res, req)
+
+			Ω(res).Should(HaveHTTPStatus(http.StatusNotFound))
+			Ω(res.Header().Get("Content-Type")).Should(Equal("application/json"))
+		})
+
 		g.It("Should not fail", func() {
 			exp := `{"hello":"world"}`
 			res := httptest.NewRecorder()
