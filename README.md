@@ -1,5 +1,5 @@
 # erised
-A simple **http server** to test arbitrary REST API responses.
+A nimble **http server** to test arbitrary REST API responses.
 
 # Usage
 `erised [options]`
@@ -12,7 +12,7 @@ Parameters:
   -level string
     	one of debug/info/warn/error/off (default "info")
   -path string
-    	path to search recursively for X-Erised-Response-File (default ".")
+    	path to search recursively for X-Erised-Response-File (path is restricted to the directory or subdirectories where the program is invoked)
   -port int
     	port to listen (default 8080)
   -read int
@@ -32,7 +32,7 @@ The latest version is also available as a Docker image at [edaddario/erised](htt
 To start the server in a docker container, with defaults values, execute the following command:
 
 ```sh
-docker run --rm -p 8080:8080 --name erised edaddario/erised [flags]
+docker run --rm -p 8080:8080 --name erised edaddario/erised [options]
 ```
 
 If you would like to return file based responses (_X-Erised-Response-File_ set) when using the docker image, you'll need to map the directory containing your local files and set the _-path_ option accordingly.
