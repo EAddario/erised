@@ -39,7 +39,7 @@ func newServer(port, read, write, idle int, path string) *server {
 		Str("readTimeout", s.cfg.ReadTimeout.String()).
 		Str("writeTimeout", s.cfg.WriteTimeout.String()).
 		Str("idleTimeout", s.cfg.IdleTimeout.String()).
-		Str("path", path).
+		Str("responseFileSearchPath", path).
 		Msg("erised server running")
 	log.Debug().Msg("leaving newServer")
 	return s

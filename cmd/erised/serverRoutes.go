@@ -131,7 +131,7 @@ func (s *server) handleHeaders() http.HandlerFunc {
 			Str("remoteAddress", req.RemoteAddr).
 			Str("method", req.Method).
 			Str("host", req.Host).
-			Str("uri", req.RequestURI).
+			Str("path", req.RequestURI).
 			Msg("handleHeaders")
 
 		if req.Method != http.MethodGet {
@@ -171,7 +171,7 @@ func (s *server) handleInfo() http.HandlerFunc {
 			Str("remoteAddress", req.RemoteAddr).
 			Str("method", req.Method).
 			Str("host", req.Host).
-			Str("uri", req.RequestURI).
+			Str("path", req.RequestURI).
 			Msg("handleInfo")
 
 		if req.Method != http.MethodGet {
@@ -201,7 +201,7 @@ func (s *server) handleIP() http.HandlerFunc {
 			Str("remoteAddress", req.RemoteAddr).
 			Str("method", req.Method).
 			Str("host", req.Host).
-			Str("uri", req.RequestURI).
+			Str("path", req.RequestURI).
 			Msg("handleIP")
 
 		if req.Method != http.MethodGet {
@@ -228,7 +228,7 @@ func (s *server) handleShutdown() http.HandlerFunc {
 			Str("remoteAddress", req.RemoteAddr).
 			Str("method", req.Method).
 			Str("host", req.Host).
-			Str("uri", req.RequestURI).
+			Str("path", req.RequestURI).
 			Msg("handleShutdown")
 
 		if req.Method != http.MethodPost {
