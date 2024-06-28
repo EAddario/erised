@@ -15,20 +15,8 @@ const (
 	encodingJSON
 	encodingXML
 	encodingGZIP
+	encodingHTML
 )
-
-func encoding(code string) (int, string, string) {
-	switch code {
-	case "json":
-		return encodingJSON, "application/json", "identity"
-	case "xml":
-		return encodingXML, "application/xml", "identity"
-	case "gzip":
-		return encodingGZIP, "application/octet-stream", "gzip"
-	default:
-		return encodingTEXT, "text/plain", "identity"
-	}
-}
 
 func httpStatusCode(code string) int {
 	switch code {
@@ -93,6 +81,21 @@ func httpStatusCode(code string) int {
 	}
 }
 
+func encoding(code string) (int, string, string) {
+	switch code {
+	case "json":
+		return encodingJSON, "application/json", ""
+	case "xml":
+		return encodingXML, "application/xml", ""
+	case "gzip":
+		return encodingGZIP, "application/octet-stream", "gzip"
+	case "html":
+		return encodingHTML, "text/html", ""
+	default:
+		return encodingTEXT, "text/plain", ""
+	}
+}
+
 func (s *server) respond(res http.ResponseWriter, encoding int, delay time.Duration, data interface{}) {
 	log.Debug().Msg("entering respond")
 
@@ -106,7 +109,7 @@ func (s *server) respond(res http.ResponseWriter, encoding int, delay time.Durat
 	}
 
 	switch encoding {
-	case encodingTEXT, encodingJSON, encodingXML:
+	case encodingTEXT, encodingJSON, encodingXML, encodingHTML:
 		if _, err := io.WriteString(res, fmt.Sprintf("%v", data)); err != nil {
 			log.Error().Msg(err.Error())
 		}
