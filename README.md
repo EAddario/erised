@@ -52,6 +52,12 @@ URL routes, HTTP methods (e.g. GET, POST, PATCH, etc.), query strings and body a
 | erised/ip       | GET    | Returns the client IP             |
 | erised/shutdown | POST   | Shutdowns the server              |
 
+The `erised/webpage` path will ignore any additional segments after `/webpage`, HTTP methods, query strings and body, and will return a webpage displaying the request's parameters.
+
+| Name             | Method | Purpose                                               |
+|------------------|--------|-------------------------------------------------------|
+| erised/webpage/* | any    | Returns a webpage displaying the request's parameters |
+
 Response behaviour is controlled via custom headers in the http request:
 
 | Name                    | Purpose                                                                                                                                                                                                                                                                                                              |
@@ -104,6 +110,7 @@ NetworkAuthenticationRequired or 511
 Any other value will resolve to 200 (OK)
 
 # Release History
+* v0.8.3 - Add _erised/webpage_ path, add multi-architecture docker images, minor refactoring, and minor cosmetic changes
 * v0.7.0 - Improve response file processing and security, change logging type, and minor source code readability changes
 * v0.6.11 - Further server shutdown improvements, minor efficiency improvements, general code refactoring and bug fixes
 * v0.6.7 - Improve server shutdown handling, and restrict allowed methods for _erised/headers_, _erised/ip_, _erised/info_ and _erised/shutdown_ routes  
