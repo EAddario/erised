@@ -192,7 +192,6 @@ func TestErisedLandingRoute(t *testing.T) {
 
 			Ω(res).Should(HaveHTTPStatus(http.StatusOK))
 			Ω(res.Header().Get("Content-Type")).Should(Equal("application/json"))
-			Ω(res.Header().Get("Content-Encoding")).Should(Equal("identity"))
 			Ω(res.Body.String()).Should(Equal(exp))
 		})
 
@@ -206,7 +205,6 @@ func TestErisedLandingRoute(t *testing.T) {
 
 			Ω(res).Should(HaveHTTPStatus(http.StatusOK))
 			Ω(res.Header().Get("Content-Type")).Should(Equal("text/plain"))
-			Ω(res.Header().Get("Content-Encoding")).Should(Equal("identity"))
 			Ω(res.Body.String()).Should(Equal(exp))
 		})
 
@@ -220,7 +218,6 @@ func TestErisedLandingRoute(t *testing.T) {
 
 			Ω(res).Should(HaveHTTPStatus(http.StatusOK))
 			Ω(res.Header().Get("Content-Type")).Should(Equal("application/xml"))
-			Ω(res.Header().Get("Content-Encoding")).Should(Equal("identity"))
 			Ω(res.Body.String()).Should(Equal(exp))
 		})
 
@@ -262,7 +259,6 @@ func TestErisedLandingRoute(t *testing.T) {
 
 			Ω(res).Should(HaveHTTPStatus(http.StatusOK))
 			Ω(res.Header().Get("Content-Type")).Should(Equal("application/json"))
-			Ω(res.Header().Get("Content-Encoding")).Should(Equal("identity"))
 			Ω(res.Body.String()).Should(Equal(exp))
 		})
 
@@ -291,7 +287,6 @@ func TestErisedLandingRoute(t *testing.T) {
 			Ω(res).Should(HaveHTTPStatus(http.StatusMovedPermanently))
 			Ω(res.Header().Get("Location")).Should(Equal("https://www.example.com"))
 			Ω(res.Header().Get("Content-Type")).Should(Equal("application/json"))
-			Ω(res.Header().Get("Content-Encoding")).Should(Equal("identity"))
 			Ω(res.Header().Get("hello")).Should(Equal("world"))
 			Ω(res.Body.String()).Should(Equal(exp))
 		})

@@ -34,15 +34,18 @@ func (s *server) handleLanding() http.HandlerFunc {
 			Str("remoteAddress", req.RemoteAddr).
 			Str("method", req.Method).
 			Str("host", req.Host).
-			Str("uri", req.RequestURI).
-			Str("searchPath", s.pth).
+			Str("path", req.RequestURI).
+			Str("responseFileSearchPath", s.pth).
 			Msg("handleLanding")
 		delay := time.Duration(0)
 		xct := req.Header.Get("X-Erised-Content-Type")
 		log.Debug().Msg("X-Erised-Content-Type: " + xct)
 		enc, ct, ce := encoding(xct)
 		res.Header().Set("Content-Type", ct)
-		res.Header().Set("Content-Encoding", ce)
+
+		if xct == "gzip" {
+			res.Header().Set("Content-Encoding", ce)
+		}
 
 		if rd, err := strconv.Atoi(req.Header.Get("X-Erised-Response-Delay")); rd > 0 && err == nil {
 			delay = time.Duration(rd) * time.Millisecond
