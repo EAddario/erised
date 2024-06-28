@@ -154,6 +154,35 @@ func TestErisedShutdownRoute(t *testing.T) {
 	})
 }
 
+func TestErisedWebPageRoute(t *testing.T) {
+	zerolog.SetGlobalLevel(zerolog.Disabled)
+	g := goblin.Goblin(t)
+	RegisterFailHandler(func(m string, _ ...int) { g.Fail(m) })
+	svr := server{}
+
+	g.Describe("Test erised/webpage", func() {
+		g.It("Should return StatusOK", func() {
+			res := httptest.NewRecorder()
+			req := httptest.NewRequest(http.MethodGet, "http://localhost:8080/erised/webpage", nil)
+			svr.handleWebPage().ServeHTTP(res, req)
+
+			Ω(res.Code).Should(Equal(http.StatusOK))
+			Ω(res.Body.String()).ShouldNot(BeEmpty())
+			Ω(res.Header().Get("Content-Type")).Should(Equal("text/html"))
+		})
+
+		g.It("Should also return StatusOK", func() {
+			res := httptest.NewRecorder()
+			req := httptest.NewRequest(http.MethodPost, "http://localhost:8080/erised/webpage/any/path", nil)
+			svr.handleWebPage().ServeHTTP(res, req)
+
+			Ω(res.Code).Should(Equal(http.StatusOK))
+			Ω(res.Body.String()).ShouldNot(BeEmpty())
+			Ω(res.Header().Get("Content-Type")).Should(Equal("text/html"))
+		})
+	})
+}
+
 func TestErisedLandingRoute(t *testing.T) {
 	zerolog.SetGlobalLevel(zerolog.Disabled)
 	g := goblin.Goblin(t)

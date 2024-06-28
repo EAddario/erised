@@ -22,6 +22,8 @@ func (s *server) routes() {
 	go s.mux.HandleFunc("/erised/info", s.handleInfo())
 	go s.mux.HandleFunc("/erised/ip", s.handleIP())
 	go s.mux.HandleFunc("/erised/shutdown", s.handleShutdown())
+	go s.mux.HandleFunc("/erised/webpage", s.handleWebPage())
+	go s.mux.HandleFunc("/erised/webpage/{path...}", s.handleWebPage())
 	log.Debug().Msg("leaving routes")
 }
 
@@ -245,5 +247,32 @@ func (s *server) handleShutdown() http.HandlerFunc {
 		log.Info().Msg("Initiating server shutdown")
 		s.stp()
 		log.Debug().Msg("leaving handleShutdown")
+	}
+}
+
+func (s *server) handleWebPage() http.HandlerFunc {
+	log.Debug().Msg("entering handleWebPage")
+
+	return func(res http.ResponseWriter, req *http.Request) {
+		log.Info().
+			Str("protocol", req.Proto).
+			Str("remoteAddress", req.RemoteAddr).
+			Str("method", req.Method).
+			Str("host", req.Host).
+			Str("path", req.RequestURI).
+			Msg("handleWebPage")
+
+		res.Header().Set("Content-Type", "text/html")
+
+		data := "<!DOCTYPE html><html><head><title>Erised Webpage</title></head>"
+		data += "<body>"
+		data += "<center><h1>Host: " + req.Host + "</h1></center>"
+		data += "<center><h1>Method: " + req.Method + "</h1></center>"
+		data += "<center><h1>Protocol: " + req.Proto + "</h1></center>"
+		data += "<center><h1>Request Path: " + req.RequestURI + "</h1></center>"
+		data += "<hr><center><a href=\"https://github.com/EAddario/erised\">Erised: A nimble http server to test arbitrary REST API responses.</a></center>"
+		data += "</body></html>"
+		s.respond(res, encodingHTML, 0, data)
+		log.Debug().Msg("leaving handleWebPage")
 	}
 }
