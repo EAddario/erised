@@ -250,8 +250,8 @@ func (s *server) handleShutdown() http.HandlerFunc {
 	}
 }
 
-func (s *server) handleWebPage() http.HandlerFunc {
-	log.Debug().Msg("entering handleWebPage")
+func (s *server) handleEchoServer() http.HandlerFunc {
+	log.Debug().Msg("entering handleEchoServer")
 
 	return func(res http.ResponseWriter, req *http.Request) {
 		log.Info().
@@ -260,19 +260,79 @@ func (s *server) handleWebPage() http.HandlerFunc {
 			Str("method", req.Method).
 			Str("host", req.Host).
 			Str("path", req.RequestURI).
-			Msg("handleWebPage")
+			Msg("handleEchoServer")
 
 		res.Header().Set("Content-Type", "text/html")
 
-		data := "<!DOCTYPE html><html><head><title>Erised Webpage</title></head>"
+		body := ""
+		buf := &bytes.Buffer{}
+		hn, _ := os.Hostname()
+
+		if _, err := buf.ReadFrom(req.Body); err == nil {
+			body = string(buf.Bytes()[:])
+		} else {
+			log.Error().Msg("Error reading request body")
+			log.Debug().Msg(fmt.Sprintf("Error: %v", err))
+			http.Error(res, "Internal Server Error", http.StatusInternalServerError)
+			return
+		}
+
+		data := "<!DOCTYPE html>"
+		data += "<html><head><title>Erised Webpage</title></head>"
+		data += "<style>h3 {color: blue; font-family: verdana; margin-bottom: -5px; padding-left: 10px;}"
+		data += "p {font-family: courier; margin-bottom: -15px; padding-left: 25px;}</style>"
 		data += "<body>"
-		data += "<center><h1>Host: " + req.Host + "</h1></center>"
-		data += "<center><h1>Method: " + req.Method + "</h1></center>"
-		data += "<center><h1>Protocol: " + req.Proto + "</h1></center>"
-		data += "<center><h1>Request Path: " + req.RequestURI + "</h1></center>"
-		data += "<hr><center><a href=\"https://github.com/EAddario/erised\">Erised: A nimble http server to test arbitrary REST API responses.</a></center>"
+
+		se := make([]string, 0, len(os.Environ()))
+
+		for _, env := range os.Environ() {
+			se = append(se, env)
+		}
+
+		sort.Strings(se)
+
+		data += "<h3><i>Server Environment Variables</i></h3>"
+		data += "<p><b>HOSTNAME: </b>" + hn + "</p><br>"
+
+		for _, env := range se {
+			ep := strings.SplitN(env, "=", 2)
+			k := ep[0]
+			v := ep[1]
+
+			data += "<p><b>" + k + ": </b>" + v + "</p>"
+		}
+
+		data += "<br><hr><h3><i>Request Info</i></h3>"
+		data += "<p><b>Remote Address: </b>" + req.RemoteAddr + "</p>"
+		data += "<p><b>Host: </b>" + req.Host + "</p>"
+		data += "<p><b>Method: </b>" + req.Method + "</p>"
+		data += "<p><b>Protocol: </b>" + req.Proto + "</p>"
+		data += "<p><b>Request Path: </b>" + req.RequestURI + "</p>"
+		data += "<p><b>Time: </b>" + time.Now().Format(time.RFC850) + "</p>"
+		data += "<br><hr><h3><i>Request Headers</i></h3>"
+
+		sh := make([]string, 0, len(req.Header))
+
+		for key := range req.Header {
+			sh = append(sh, key)
+		}
+
+		sort.Strings(sh)
+
+		for _, k := range sh {
+			for _, v := range req.Header[k] {
+				data += "<p><b>" + k + ": </b>" + v + "</p>"
+			}
+		}
+
+		if body != "" {
+			data += "<br><hr><h3><i>Request Body</i></h3>"
+			data += "<p>" + body + "</p>"
+		}
+
+		data += "<br><hr><br><center><a href=\"https://github.com/EAddario/erised\">Erised: A nimble http server to test arbitrary REST API responses.</a></center>"
 		data += "</body></html>"
 		s.respond(res, encodingHTML, 0, data)
-		log.Debug().Msg("leaving handleWebPage")
+		log.Debug().Msg("leaving handleEchoServer")
 	}
 }
