@@ -154,27 +154,27 @@ func TestErisedShutdownRoute(t *testing.T) {
 	})
 }
 
-func TestErisedWebPageRoute(t *testing.T) {
+func TestErisedEchoServerRoute(t *testing.T) {
 	zerolog.SetGlobalLevel(zerolog.Disabled)
 	g := goblin.Goblin(t)
 	RegisterFailHandler(func(m string, _ ...int) { g.Fail(m) })
 	svr := server{}
 
-	g.Describe("Test erised/webpage", func() {
-		g.It("Should return StatusOK", func() {
+	g.Describe("Test erised/echoserver", func() {
+		g.It("Should return non-empty body and StatusOK", func() {
 			res := httptest.NewRecorder()
-			req := httptest.NewRequest(http.MethodGet, "http://localhost:8080/erised/webpage", nil)
-			svr.handleWebPage().ServeHTTP(res, req)
+			req := httptest.NewRequest(http.MethodGet, "http://localhost:8080/erised/echoserver", nil)
+			svr.handleEchoServer().ServeHTTP(res, req)
 
 			Ω(res.Code).Should(Equal(http.StatusOK))
 			Ω(res.Body.String()).ShouldNot(BeEmpty())
 			Ω(res.Header().Get("Content-Type")).Should(Equal("text/html"))
 		})
 
-		g.It("Should also return StatusOK", func() {
+		g.It("Should also return non-empty body and StatusOK", func() {
 			res := httptest.NewRecorder()
-			req := httptest.NewRequest(http.MethodPost, "http://localhost:8080/erised/webpage/any/path", nil)
-			svr.handleWebPage().ServeHTTP(res, req)
+			req := httptest.NewRequest(http.MethodPost, "http://localhost:8080/erised/echoserver/any/path", nil)
+			svr.handleEchoServer().ServeHTTP(res, req)
 
 			Ω(res.Code).Should(Equal(http.StatusOK))
 			Ω(res.Body.String()).ShouldNot(BeEmpty())
