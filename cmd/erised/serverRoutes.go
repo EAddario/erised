@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -8,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -22,8 +24,8 @@ func (s *server) routes() {
 	go s.mux.HandleFunc("/erised/info", s.handleInfo())
 	go s.mux.HandleFunc("/erised/ip", s.handleIP())
 	go s.mux.HandleFunc("/erised/shutdown", s.handleShutdown())
-	go s.mux.HandleFunc("/erised/webpage", s.handleWebPage())
-	go s.mux.HandleFunc("/erised/webpage/{path...}", s.handleWebPage())
+	go s.mux.HandleFunc("/erised/echoserver", s.handleEchoServer())
+	go s.mux.HandleFunc("/erised/echoserver/{path...}", s.handleEchoServer())
 	log.Debug().Msg("leaving routes")
 }
 
