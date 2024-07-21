@@ -110,6 +110,7 @@ NetworkAuthenticationRequired or 511
 Any other value will resolve to 200 (OK)
 
 # Release History
+* v0.9.7 - Refactor error handling
 * v0.9.6 - Rename _erised/webpage_ to _erised/echoserver_ and add headers and server environment information
 * v0.8.3 - Add _erised/webpage_ path, add multi-architecture docker images, minor refactoring, and minor cosmetic changes
 * v0.7.0 - Improve response file processing and security, change logging type, and minor source code readability changes
