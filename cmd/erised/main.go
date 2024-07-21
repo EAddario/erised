@@ -60,19 +60,21 @@ func main() {
 		sigChan := make(chan os.Signal, 1)
 		signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT, syscall.SIGHUP)
 		<-sigChan
-
 		srv.stp()
 	}()
 
 	go func() {
-		if err := srv.cfg.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
+		if err = srv.cfg.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
 			log.Error().Msg(err.Error())
+			if err = syscall.Kill(syscall.Getpid(), syscall.SIGINT); err != nil {
+				panic(err)
+			}
 		}
 	}()
 
 	select {
 	case <-srv.ctx.Done():
-		if err := srv.cfg.Shutdown(srv.ctx); err != nil {
+		if err = srv.cfg.Shutdown(srv.ctx); err != nil {
 			log.Error().Msg(err.Error())
 		}
 	}
