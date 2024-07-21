@@ -1,5 +1,5 @@
 # erised
-A nimble **http server** to test arbitrary REST API responses.
+A nimble **http** and **echo** server to test arbitrary http requests and REST API responses.
 
 # Usage
 `erised [options]`
