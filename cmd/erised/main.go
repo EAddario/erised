@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"strings"
 	"syscall"
+	"time"
 )
 
 const version = "v0.9.7"
@@ -22,6 +23,7 @@ func main() {
 		panic("Unable to get current directory. Program will terminate.")
 	}
 
+	defer elapsedTime(time.Now(), "Erised Server")
 	log.Debug().Msg("entering main")
 	pt := flag.Int("port", 8080, "port to listen")
 	rt := flag.Int("read", 5, "maximum duration in seconds for reading the entire request")

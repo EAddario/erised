@@ -18,6 +18,11 @@ const (
 	encodingHTML
 )
 
+func elapsedTime(start time.Time, name string) {
+	elapsed := time.Since(start)
+	log.Debug().Msg(name + " ran for " + elapsed.Round(time.Second).String())
+}
+
 func httpStatusCode(code string) int {
 	switch code {
 	case "MultipleChoices", "300":
