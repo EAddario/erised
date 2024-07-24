@@ -17,19 +17,19 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func (s *server) routes() {
+func (srv *server) routes() {
 	log.Debug().Msg("entering routes")
-	go s.mux.HandleFunc("/", s.handleLanding())
-	go s.mux.HandleFunc("/erised/headers", s.handleHeaders())
-	go s.mux.HandleFunc("/erised/info", s.handleInfo())
-	go s.mux.HandleFunc("/erised/ip", s.handleIP())
-	go s.mux.HandleFunc("/erised/shutdown", s.handleShutdown())
-	go s.mux.HandleFunc("/erised/echoserver", s.handleEchoServer())
-	go s.mux.HandleFunc("/erised/echoserver/{path...}", s.handleEchoServer())
+	go srv.mux.HandleFunc("/", srv.handleLanding())
+	go srv.mux.HandleFunc("/erised/headers", srv.handleHeaders())
+	go srv.mux.HandleFunc("/erised/info", srv.handleInfo())
+	go srv.mux.HandleFunc("/erised/ip", srv.handleIP())
+	go srv.mux.HandleFunc("/erised/shutdown", srv.handleShutdown())
+	go srv.mux.HandleFunc("/erised/echoserver", srv.handleEchoServer())
+	go srv.mux.HandleFunc("/erised/echoserver/{path...}", srv.handleEchoServer())
 	log.Debug().Msg("leaving routes")
 }
 
-func (s *server) handleLanding() http.HandlerFunc {
+func (srv *server) handleLanding() http.HandlerFunc {
 	log.Debug().Msg("entering handleLanding")
 
 	return func(res http.ResponseWriter, req *http.Request) {
@@ -39,51 +39,51 @@ func (s *server) handleLanding() http.HandlerFunc {
 			Str("method", req.Method).
 			Str("host", req.Host).
 			Str("path", req.RequestURI).
-			Str("responseFileSearchPath", s.pth).
+			Str("responseFileSearchPath", srv.pth).
 			Msg("handleLanding")
 		delay := time.Duration(0)
-		xct := req.Header.Get("X-Erised-Content-Type")
-		log.Debug().Msg("X-Erised-Content-Type: " + xct)
-		enc, ct, ce := encoding(xct)
-		res.Header().Set("Content-Type", ct)
+		xContentType := req.Header.Get("X-Erised-Content-Type")
+		log.Debug().Msg("X-Erised-Content-Type: " + xContentType)
+		encoding, mime, contentEncoding := mimeType(xContentType)
+		res.Header().Set("Content-Type", mime)
 
-		if xct == "gzip" {
-			res.Header().Set("Content-Encoding", ce)
+		if xContentType == "gzip" {
+			res.Header().Set("Content-Encoding", contentEncoding)
 		}
 
-		if rd, err := strconv.Atoi(req.Header.Get("X-Erised-Response-Delay")); rd > 0 && err == nil {
-			delay = time.Duration(rd) * time.Millisecond
+		if xrd, err := strconv.Atoi(req.Header.Get("X-Erised-Response-Delay")); xrd > 0 && err == nil {
+			delay = time.Duration(xrd) * time.Millisecond
 			log.Debug().Msg("X-Erised-Response-Delay: " + delay.String())
 		}
 
-		xhd := req.Header.Get("X-Erised-Headers")
-		log.Debug().Msg("X-Erised-Headers: " + xhd)
-		var rs map[string]interface{}
+		xHeaders := req.Header.Get("X-Erised-Headers")
+		log.Debug().Msg("X-Erised-Headers: " + xHeaders)
+		var hdrs map[string]interface{}
 
-		if err := json.Unmarshal([]byte(xhd), &rs); err == nil {
-			if len(rs) != 0 {
-				for k, v := range rs {
+		if err := json.Unmarshal([]byte(xHeaders), &hdrs); err == nil {
+			if len(hdrs) != 0 {
+				for k, v := range hdrs {
 					res.Header().Set(k, fmt.Sprintf("%v", v))
 				}
 			}
 		}
 
-		xsc := httpStatusCode(req.Header.Get("X-Erised-Status-Code"))
-		log.Debug().Msg("X-Erised-Status-Code: " + strconv.Itoa(xsc))
+		xStatusCode := httpStatusCode(req.Header.Get("X-Erised-Status-Code"))
+		log.Debug().Msg("X-Erised-Status-Code: " + strconv.Itoa(xStatusCode))
 
-		if xsc >= 300 && xsc < 310 {
+		if xStatusCode >= 300 && xStatusCode < 310 {
 			xloc := req.Header.Get("X-Erised-Location")
 			res.Header().Set("Location", xloc)
 			log.Debug().Msg("X-Erised-Location: " + xloc)
 		}
 
-		xdt := ""
+		xData := ""
 
-		if xrf := req.Header.Get("X-Erised-Response-File"); xrf != "" && s.pth != "" {
-			log.Debug().Msg("X-Erised-Response-File: " + xrf)
-			xsc = http.StatusNotFound
+		if xResponseFile := req.Header.Get("X-Erised-Response-File"); xResponseFile != "" && srv.pth != "" {
+			log.Debug().Msg("X-Erised-Response-File: " + xResponseFile)
+			xStatusCode = http.StatusNotFound
 
-			err := filepath.WalkDir(s.pth, func(path string, entry fs.DirEntry, err error) error {
+			err := filepath.WalkDir(srv.pth, func(path string, entry fs.DirEntry, err error) error {
 
 				if err != nil {
 					log.Error().Msg("Invalid path: " + path)
@@ -92,7 +92,7 @@ func (s *server) handleLanding() http.HandlerFunc {
 					return errors.New("INVALID_PATH_ERROR")
 				}
 
-				if !entry.IsDir() && filepath.Base(path) == xrf {
+				if !entry.IsDir() && filepath.Base(path) == xResponseFile {
 					if ct, err := os.ReadFile(path); err != nil {
 						log.Error().Msg("Unable to open the file: " + path)
 						log.Debug().Msg(fmt.Sprintf("Error: %v", err))
@@ -100,36 +100,36 @@ func (s *server) handleLanding() http.HandlerFunc {
 						return errors.New("FILE_ACCESS_ERROR")
 					} else {
 						log.Info().Msg(fmt.Sprintf("Reading file %v", path))
-						xdt = string(ct)
+						xData = string(ct)
 
 						return errors.New("FILE_FOUND")
 					}
 				}
 
-				log.Debug().Msg("File " + xrf + " not found in " + path)
+				log.Debug().Msg("File " + xResponseFile + " not found in " + path)
 				return nil
 			})
 
 			switch fmt.Sprintf("%v", err) {
 			case "INVALID_PATH_ERROR":
-				xsc = http.StatusBadRequest
+				xStatusCode = http.StatusBadRequest
 			case "FILE_ACCESS_ERROR":
-				xsc = http.StatusInternalServerError
+				xStatusCode = http.StatusInternalServerError
 			case "FILE_FOUND":
-				xsc = http.StatusOK
+				xStatusCode = http.StatusOK
 			}
 		} else {
-			xdt = req.Header.Get("X-Erised-Data")
-			log.Debug().Msg("X-Erised-Data: " + xdt)
+			xData = req.Header.Get("X-Erised-Data")
+			log.Debug().Msg("X-Erised-Data: " + xData)
 		}
 
-		res.WriteHeader(xsc)
-		s.respond(res, enc, delay, xdt)
+		res.WriteHeader(xStatusCode)
+		srv.respond(res, encoding, delay, xData)
 		log.Debug().Msg("leaving handleLanding")
 	}
 }
 
-func (s *server) handleHeaders() http.HandlerFunc {
+func (srv *server) handleHeaders() http.HandlerFunc {
 	log.Debug().Msg("entering handleHeaders")
 
 	return func(res http.ResponseWriter, req *http.Request) {
@@ -164,12 +164,12 @@ func (s *server) handleHeaders() http.HandlerFunc {
 
 		data += "\"Host\":\"" + req.Host + "\""
 		data += "}"
-		s.respond(res, encodingJSON, 0, data)
+		srv.respond(res, encodingJSON, 0, data)
 		log.Debug().Msg("leaving handleHeaders")
 	}
 }
 
-func (s *server) handleInfo() http.HandlerFunc {
+func (srv *server) handleInfo() http.HandlerFunc {
 	log.Debug().Msg("entering handleInfo")
 
 	return func(res http.ResponseWriter, req *http.Request) {
@@ -194,12 +194,12 @@ func (s *server) handleInfo() http.HandlerFunc {
 		data += "\"Protocol\":\"" + req.Proto + "\","
 		data += "\"Request URI\":\"" + req.RequestURI + "\""
 		data += "}"
-		s.respond(res, encodingJSON, 0, data)
+		srv.respond(res, encodingJSON, 0, data)
 		log.Debug().Msg("leaving handleInfo")
 	}
 }
 
-func (s *server) handleIP() http.HandlerFunc {
+func (srv *server) handleIP() http.HandlerFunc {
 	log.Debug().Msg("entering handleIP")
 
 	return func(res http.ResponseWriter, req *http.Request) {
@@ -221,12 +221,12 @@ func (s *server) handleIP() http.HandlerFunc {
 		data := "{"
 		data += "\"Client IP\":\"" + req.RemoteAddr + "\""
 		data += "}"
-		s.respond(res, encodingJSON, 0, data)
+		srv.respond(res, encodingJSON, 0, data)
 		log.Debug().Msg("leaving handleIP")
 	}
 }
 
-func (s *server) handleShutdown() http.HandlerFunc {
+func (srv *server) handleShutdown() http.HandlerFunc {
 	log.Debug().Msg("entering handleShutdown")
 
 	return func(res http.ResponseWriter, req *http.Request) {
@@ -245,14 +245,14 @@ func (s *server) handleShutdown() http.HandlerFunc {
 		}
 
 		res.Header().Set("Content-Type", "application/json")
-		s.respond(res, encodingJSON, 0, "{\"shutdown\":\"ok\"}")
+		srv.respond(res, encodingJSON, 0, "{\"shutdown\":\"ok\"}")
 		log.Info().Msg("Initiating server shutdown")
-		s.stp()
+		srv.stp()
 		log.Debug().Msg("leaving handleShutdown")
 	}
 }
 
-func (s *server) handleEchoServer() http.HandlerFunc {
+func (srv *server) handleEchoServer() http.HandlerFunc {
 	log.Debug().Msg("entering handleEchoServer")
 
 	return func(res http.ResponseWriter, req *http.Request) {
@@ -268,7 +268,7 @@ func (s *server) handleEchoServer() http.HandlerFunc {
 
 		body := ""
 		buf := &bytes.Buffer{}
-		hn, _ := os.Hostname()
+		hostName, _ := os.Hostname()
 
 		if _, err := buf.ReadFrom(req.Body); err == nil {
 			body = string(buf.Bytes()[:])
@@ -285,23 +285,23 @@ func (s *server) handleEchoServer() http.HandlerFunc {
 		data += "p {font-family: courier; margin-bottom: -15px; padding-left: 25px;}</style>"
 		data += "<body>"
 
-		se := make([]string, 0, len(os.Environ()))
+		env := make([]string, 0, len(os.Environ()))
 
-		for _, env := range os.Environ() {
-			se = append(se, env)
+		for _, v := range os.Environ() {
+			env = append(env, v)
 		}
 
-		sort.Strings(se)
+		sort.Strings(env)
 
 		data += "<h3><i>Server Environment Variables</i></h3>"
-		data += "<p><b>HOSTNAME: </b>" + hn + "</p><br>"
+		data += "<p><b>HOSTNAME: </b>" + hostName + "</p><br>"
 
-		for _, env := range se {
-			ep := strings.SplitN(env, "=", 2)
-			k := ep[0]
-			v := ep[1]
+		for _, v := range env {
+			pq := strings.SplitN(v, "=", 2)
+			p := pq[0]
+			q := pq[1]
 
-			data += "<p><b>" + k + ": </b>" + v + "</p>"
+			data += "<p><b>" + p + ": </b>" + q + "</p>"
 		}
 
 		data += "<br><hr><h3><i>Request Info</i></h3>"
@@ -313,15 +313,15 @@ func (s *server) handleEchoServer() http.HandlerFunc {
 		data += "<p><b>Time: </b>" + time.Now().Format(time.RFC850) + "</p>"
 		data += "<br><hr><h3><i>Request Headers</i></h3>"
 
-		sh := make([]string, 0, len(req.Header))
+		hdrs := make([]string, 0, len(req.Header))
 
 		for key := range req.Header {
-			sh = append(sh, key)
+			hdrs = append(hdrs, key)
 		}
 
-		sort.Strings(sh)
+		sort.Strings(hdrs)
 
-		for _, k := range sh {
+		for _, k := range hdrs {
 			for _, v := range req.Header[k] {
 				data += "<p><b>" + k + ": </b>" + v + "</p>"
 			}
@@ -332,10 +332,9 @@ func (s *server) handleEchoServer() http.HandlerFunc {
 			data += "<p>" + body + "</p>"
 		}
 
-		data += "<br><hr><br><center><a href=\"https://github.com/EAddario/erised\">Erised: A nimble http server to test arbitrary REST API responses.</a></center>"
 		data += "<br><hr><br><center><a href=\"https://github.com/EAddario/erised\">Erised (" + version + "): A nimble http server to test arbitrary REST API responses.</a></center>"
 		data += "</body></html>"
-		s.respond(res, encodingHTML, 0, data)
+		srv.respond(res, encodingHTML, 0, data)
 		log.Debug().Msg("leaving handleEchoServer")
 	}
 }

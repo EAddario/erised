@@ -86,7 +86,7 @@ func httpStatusCode(code string) int {
 	}
 }
 
-func encoding(code string) (int, string, string) {
+func mimeType(code string) (int, string, string) {
 	switch code {
 	case "json":
 		return encodingJSON, "application/json", ""
@@ -101,7 +101,7 @@ func encoding(code string) (int, string, string) {
 	}
 }
 
-func (s *server) respond(res http.ResponseWriter, encoding int, delay time.Duration, data interface{}) {
+func (srv *server) respond(res http.ResponseWriter, encoding int, delay time.Duration, data interface{}) {
 	log.Debug().Msg("entering respond")
 
 	if delay > 0 {

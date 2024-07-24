@@ -14,10 +14,10 @@ func init() {
 	zerolog.SetGlobalLevel(zerolog.InfoLevel)
 }
 
-func setupFlags(f *flag.FlagSet) {
+func setupFlags(flg *flag.FlagSet) {
 	log.Debug().Msg("entering setupFlags")
 
-	f.Usage = func() {
+	flg.Usage = func() {
 		fmt.Println("Simple http server to test arbitrary responses (" + version + ")")
 		fmt.Println("Usage examples at https://github.com/EAddario/erised")
 		fmt.Println("\nerised [options]")

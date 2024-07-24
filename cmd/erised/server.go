@@ -19,28 +19,28 @@ type server struct {
 
 func newServer(port, read, write, idle int, path string) *server {
 	log.Debug().Msg("entering newServer")
-	s := &server{}
-	s.mux = &http.ServeMux{}
+	srv := &server{}
+	srv.mux = &http.ServeMux{}
 
-	s.cfg = &http.Server{
+	srv.cfg = &http.Server{
 		Addr:         ":" + strconv.Itoa(port),
-		Handler:      s.mux,
+		Handler:      srv.mux,
 		ReadTimeout:  time.Duration(read) * time.Second,
 		WriteTimeout: time.Duration(write) * time.Second,
 		IdleTimeout:  time.Duration(idle) * time.Second,
 	}
 
-	s.ctx, s.stp = context.WithCancel(context.Background())
-	s.pth = path
-	s.routes()
+	srv.ctx, srv.stp = context.WithCancel(context.Background())
+	srv.pth = path
+	srv.routes()
 	log.Info().
 		Str("version", version).
 		Int("port", port).
-		Str("readTimeout", s.cfg.ReadTimeout.String()).
-		Str("writeTimeout", s.cfg.WriteTimeout.String()).
-		Str("idleTimeout", s.cfg.IdleTimeout.String()).
+		Str("readTimeout", srv.cfg.ReadTimeout.String()).
+		Str("writeTimeout", srv.cfg.WriteTimeout.String()).
+		Str("idleTimeout", srv.cfg.IdleTimeout.String()).
 		Str("responseFileSearchPath", path).
 		Msg("erised server running")
 	log.Debug().Msg("leaving newServer")
-	return s
+	return srv
 }

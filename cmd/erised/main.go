@@ -15,29 +15,28 @@ import (
 	"time"
 )
 
-const version = "v0.9.7"
 
 func main() {
-	cd, err := os.Getwd()
-
-	if err != nil {
-		panic("Unable to get current directory. Program will terminate.")
-	}
-
 	defer elapsedTime(time.Now(), "Erised Server")
 	log.Debug().Msg("entering main")
-	pt := flag.Int("port", 8080, "port to listen")
-	rt := flag.Int("read", 5, "maximum duration in seconds for reading the entire request")
-	wt := flag.Int("write", 10, "maximum duration in seconds before timing out response writes")
-	it := flag.Int("idle", 120, "maximum time in seconds to wait for the next request when keep-alive is enabled")
-	lv := flag.String("level", "info", "one of debug/info/warn/error/off")
-	lf := flag.Bool("json", false, "use JSON log format")
-	ph := flag.String("path", "", "path to search recursively for X-Erised-Response-File")
+
+	var dir string
+	var err error
+	idleTimeout := flag.Int("idle", 120, "maximum time in seconds to wait for the next request when keep-alive is enabled")
+	jsonLog := flag.Bool("json", false, "use JSON log format")
+	logLevel := flag.String("level", "info", "one of debug/info/warn/error/off")
+	searchPath := flag.String("path", "", "path to search recursively for X-Erised-Response-File")
+	port := flag.Int("port", 8080, "port to listen")
 	profile := flag.String("profile", "", "profile this session. A valid file name is required")
+	readTimeout := flag.Int("read", 5, "maximum duration in seconds for reading the entire request")
+	writeTimeout := flag.Int("write", 10, "maximum duration in seconds before timing out response writes")
 	setupFlags(flag.CommandLine)
 	flag.Parse()
 
-	switch strings.ToLower(*lv) {
+	if dir, err = os.Getwd(); err != nil {
+		panic("Unable to get current directory. Program will terminate.\n\n" + err.Error())
+	}
+
 	if *profile != "" {
 		if f, err := os.Create(*profile + ".prof"); err == nil {
 			if err = pprof.StartCPUProfile(f); err != nil {
@@ -49,6 +48,8 @@ func main() {
 			log.Error().Msg("Unable to create profiling file: " + err.Error())
 		}
 	}
+
+	switch strings.ToLower(*logLevel) {
 	case "debug":
 		zerolog.SetGlobalLevel(zerolog.DebugLevel)
 	case "info":
@@ -61,15 +62,15 @@ func main() {
 		zerolog.SetGlobalLevel(zerolog.Disabled)
 	}
 
-	if *lf {
+	if *jsonLog {
 		log.Logger = zerolog.New(os.Stderr).With().Timestamp().Logger()
 	}
 
-	if *ph != "" {
-		*ph = filepath.Join(cd, *ph)
+	if *searchPath != "" {
+		*searchPath = filepath.Join(dir, *searchPath)
 	}
 
-	srv := newServer(*pt, *rt, *wt, *it, *ph)
+	srv := newServer(*port, *readTimeout, *writeTimeout, *idleTimeout, *searchPath)
 
 	go func() {
 		sigChan := make(chan os.Signal, 1)
