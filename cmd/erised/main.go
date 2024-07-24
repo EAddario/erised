@@ -15,6 +15,7 @@ import (
 	"time"
 )
 
+const version = "v0.10.3"
 
 func main() {
 	defer elapsedTime(time.Now(), "Erised Server")
