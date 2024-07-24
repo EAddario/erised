@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
+	"runtime/pprof"
 	"strings"
 	"syscall"
 	"time"
@@ -32,10 +33,22 @@ func main() {
 	lv := flag.String("level", "info", "one of debug/info/warn/error/off")
 	lf := flag.Bool("json", false, "use JSON log format")
 	ph := flag.String("path", "", "path to search recursively for X-Erised-Response-File")
+	profile := flag.String("profile", "", "profile this session. A valid file name is required")
 	setupFlags(flag.CommandLine)
 	flag.Parse()
 
 	switch strings.ToLower(*lv) {
+	if *profile != "" {
+		if f, err := os.Create(*profile + ".prof"); err == nil {
+			if err = pprof.StartCPUProfile(f); err != nil {
+				panic("Cannot enable profiling. Program will terminate.\n\n" + err.Error())
+			} else {
+				defer pprof.StopCPUProfile()
+			}
+		} else {
+			log.Error().Msg("Unable to create profiling file: " + err.Error())
+		}
+	}
 	case "debug":
 		zerolog.SetGlobalLevel(zerolog.DebugLevel)
 	case "info":
