@@ -333,6 +333,7 @@ func (s *server) handleEchoServer() http.HandlerFunc {
 		}
 
 		data += "<br><hr><br><center><a href=\"https://github.com/EAddario/erised\">Erised: A nimble http server to test arbitrary REST API responses.</a></center>"
+		data += "<br><hr><br><center><a href=\"https://github.com/EAddario/erised\">Erised (" + version + "): A nimble http server to test arbitrary REST API responses.</a></center>"
 		data += "</body></html>"
 		s.respond(res, encodingHTML, 0, data)
 		log.Debug().Msg("leaving handleEchoServer")
