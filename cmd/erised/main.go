@@ -23,16 +23,25 @@ func main() {
 
 	var dir string
 	var err error
+	certFile := flag.String("cert", "", "path to a valid certificate file")
 	idleTimeout := flag.Int("idle", 120, "maximum time in seconds to wait for the next request when keep-alive is enabled")
 	jsonLog := flag.Bool("json", false, "use JSON log format")
+	keyFile := flag.String("key", "", "path to a valid private key file")
 	logLevel := flag.String("level", "info", "one of debug/info/warn/error/off")
-	searchPath := flag.String("path", "", "path to search recursively for X-Erised-Response-File")
-	port := flag.Int("port", 8080, "port to listen")
+	port := flag.Int("port", 0, "port to listen. Default is 8080 for HTTP and 8443 for HTTPS")
 	profile := flag.String("profile", "", "profile this session. A valid file name is required")
 	readTimeout := flag.Int("read", 5, "maximum duration in seconds for reading the entire request")
+	searchPath := flag.String("path", "", "path to search recursively for X-Erised-Response-File")
+	useTLS := flag.Bool("https", false, "use HTTPS instead of HTTP. A valid certificate and key are required")
 	writeTimeout := flag.Int("write", 10, "maximum duration in seconds before timing out response writes")
 	setupFlags(flag.CommandLine)
 	flag.Parse()
+
+	if *port == 0 && !*useTLS {
+		*port = 8080
+	} else if *port == 0 && *useTLS {
+		*port = 8443
+	}
 
 	if dir, err = os.Getwd(); err != nil {
 		log.Fatal().Msg("Unable to get current directory. Program will terminate.")
@@ -66,6 +75,8 @@ func main() {
 		zerolog.SetGlobalLevel(zerolog.ErrorLevel)
 	case "off":
 		zerolog.SetGlobalLevel(zerolog.Disabled)
+	default:
+		zerolog.SetGlobalLevel(zerolog.Disabled)
 	}
 
 	if *jsonLog {
@@ -74,6 +85,11 @@ func main() {
 
 	if *searchPath != "" {
 		*searchPath = filepath.Join(dir, *searchPath)
+	}
+
+	if *useTLS && (*certFile == "" || *keyFile == "") {
+		log.Fatal().Msg("HTTPS requires a valid certificate and key file")
+		os.Exit(1)
 	}
 
 	srv := newServer(*port, *readTimeout, *writeTimeout, *idleTimeout, *searchPath)
@@ -86,10 +102,21 @@ func main() {
 	}()
 
 	go func() {
-		if err = srv.cfg.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
-			log.Error().Msg(err.Error())
-			if err = syscall.Kill(syscall.Getpid(), syscall.SIGINT); err != nil {
-				panic(err)
+		if *useTLS {
+			if err = srv.cfg.ListenAndServeTLS(*certFile, *keyFile); !errors.Is(err, http.ErrServerClosed) {
+				log.Error().Msg(err.Error())
+				if err = syscall.Kill(syscall.Getpid(), syscall.SIGINT); err != nil {
+					log.Fatal().Msg(err.Error())
+					os.Exit(1)
+				}
+			}
+		} else {
+			if err = srv.cfg.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
+				log.Error().Msg(err.Error())
+				if err = syscall.Kill(syscall.Getpid(), syscall.SIGINT); err != nil {
+					log.Fatal().Msg(err.Error())
+					os.Exit(1)
+				}
 			}
 		}
 	}()
