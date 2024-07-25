@@ -35,18 +35,23 @@ func main() {
 	flag.Parse()
 
 	if dir, err = os.Getwd(); err != nil {
-		panic("Unable to get current directory. Program will terminate.\n\n" + err.Error())
+		log.Fatal().Msg("Unable to get current directory. Program will terminate.")
+		log.Fatal().Msg(err.Error())
+		os.Exit(1)
 	}
 
 	if *profile != "" {
 		if f, err := os.Create(*profile + ".prof"); err == nil {
 			if err = pprof.StartCPUProfile(f); err != nil {
-				panic("Cannot enable profiling. Program will terminate.\n\n" + err.Error())
+				log.Fatal().Msg("Cannot enable profiling. Program will terminate.")
+				log.Fatal().Msg(err.Error())
+				os.Exit(1)
 			} else {
 				defer pprof.StopCPUProfile()
 			}
 		} else {
 			log.Error().Msg("Unable to create profiling file: " + err.Error())
+			log.Error().Msg("Profiling will be disabled")
 		}
 	}
 
