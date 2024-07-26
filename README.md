@@ -5,39 +5,47 @@ A nimble **http** and **echo** server to test arbitrary http requests and REST A
 `erised [options]`
 ```text
 Parameters:
+  -cert string
+    	path to a valid X.509 certificate file
+  -https
+    	use HTTPS instead of HTTP. A valid X.509 certificate and private key are required
   -idle int
     	maximum time in seconds to wait for the next request when keep-alive is enabled (default 120)
   -json
     	use JSON log format
+  -key string
+    	path to a valid private key file
   -level string
     	one of debug/info/warn/error/off (default "info")
   -path string
-    	path to search recursively for X-Erised-Response-File (path is restricted to the directory or subdirectories where the program is invoked)
+    	path to search recursively for X-Erised-Response-File
   -port int
-    	port to listen (default 8080)
+    	port to listen. Default is 8080 for HTTP and 8443 for HTTPS
+  -profile string
+    	profile this session. A valid file name is required
   -read int
     	maximum duration in seconds for reading the entire request (default 5)
   -write int
     	maximum duration in seconds before timing out response writes (default 10)
 ```
 
-For help type **erised -h**
+For help type `erised -h`
 
-When executing **erised** with no parameters, the server will listen on port **8080** for incoming http requests.
+When executing _erised_ with no parameters, the server will listen on port _8080_ for incoming http requests.
 
-If you're using the _-path_ option, please **EXERCISE GREAT CAUTION** when setting the path to search. See **Known Issues** for more information. For security reasons, path is restricted to the directory or subdirectories where the program was invoked.
+If you're using the _-path_ option, please **EXERCISE GREAT CAUTION** when setting the path to search. See **Known Issues** for more information. For security reasons, _path_ is restricted to the directory or subdirectories where the program was invoked.
 
 The latest version is also available as a Docker image at [edaddario/erised](https://hub.docker.com/r/edaddario/erised).
 
 To start the server in a docker container, with defaults values, execute the following command:
 
 ```sh
-docker run --rm -p 8080:8080 --name erised edaddario/erised [options]
+docker run --rm -p 8080:8080 --name erised edaddario/erised
 ```
 
 If you would like to return file based responses (_X-Erised-Response-File_ set) when using the docker image, you'll need to map the directory containing your local files and set the _-path_ option accordingly.
 
-The following example maps the **/local_directory/response_files** directory in your local machine to **/files** in the docker image, and then sets the **-path** option:
+The following example maps the _/local_directory/response_files_ directory in your local machine to _/files_ in the docker image, and then sets the _-path_ option:
 
 ```sh
 docker run --rm -p 8080:8080 --name erised -v /local_directory/response_files:/files edaddario/erised -path ./files
@@ -52,7 +60,7 @@ URL routes, HTTP methods (e.g. GET, POST, PATCH, etc.), query strings and body a
 | erised/ip       | GET    | Returns the client IP             |
 | erised/shutdown | POST   | Shutdowns the server              |
 
-The `erised/echoserver` path will ignore any additional segments after `/echoserver`, including HTTP methods, query strings and body, and it will return a webpage displaying server information and the request's parameters.
+The _erised/echoserver_ path will ignore any additional segments after _/echoserver_, including HTTP methods, query strings and body, and it will return a webpage displaying server information and the request's parameters.
 
 | Name                | Method | Purpose                                                                      |
 |---------------------|--------|------------------------------------------------------------------------------|
@@ -110,6 +118,7 @@ NetworkAuthenticationRequired or 511
 Any other value will resolve to 200 (OK)
 
 # Release History
+* v0.11.2 - Add HTTPS capability, add test certificates, add program execution timing, add profiling option, refactor variable names for readability, and replace panics with more user-friendly fatal logs
 * v0.9.7 - Refactor error handling
 * v0.9.6 - Rename _erised/webpage_ to _erised/echoserver_ and add headers and server environment information
 * v0.8.3 - Add _erised/webpage_ path, add multi-architecture docker images, minor refactoring, and minor cosmetic changes
@@ -128,23 +137,47 @@ Any other value will resolve to 200 (OK)
 * v0.0.2 - Add HTTP redirection status codes (300's), startup configuration parameters and request's logging
 * v0.0.1 - Initial release
 
+# Enabling HTTPS
+In order to enable HTTPS support, _erised_ requires a valid X.509 certificate signed by a trusted [Certification Authority](https://en.wikipedia.org/wiki/Certificate_authority) (CA) like [IdenTrust](https://www.identrust.com/), [DigiCert](https://www.digicert.com/) or [Let's Encrypt](https://letsencrypt.org/).
+
+If you don't have one, or would prefer to use a local version, you'll find the necessary certificate ([localCA.pem](./cmd/erised/certs/localCA.pem)) to setup a Root CA in the [/certs](./cmd/erised/certs) folder, which will allow your computer to verify the included test certificate and key. The process to install the CA certificate is beyond the objective of this README, but [Google](https://www.google.com/search?q=how+to+install+trusted+root+certificate) or your favourite AI can help. Once the certificate is installed, it will show as **Erised Test CA**. Please ensure it is marked as **_trusted_**.
+
+You should now be able to run _erised_ in HTTPS mode by executing `erised -https -cert erised.crt -key erised.key` where _erised.crt_ is the "site's" (your computer) X.509 certificate and _erised.key_ is the private key.
+
+### A word of caution about trusting certificates with unclear provenance:
+As mentioned before, covering the intricacies of establishing cryptographically secure digital identities and documenting the process to generate the relevant keys and certificates is well beyond the scope of this README, but it is important to at least call out some of the risks incurred when trusting a digital certificate because, in addition to validate identity and secure the communication between parties, they are also used to "sign" code (programs and libraries) that can run with privileged permissions.
+
+I hope the message is clear: **when dealing with anything security related it always pays to be very careful and when in doubt, the best option is just not to.**
+
+The [Secure Sockets Layer (SSL)](https://www.digicert.com/what-is-ssl-tls-and-https) certificates included with _erised_ are linked to _localhost_ and can only be used to enable TLS/SSL communication within your own computer.
+
+For transparency, the (high level) steps to create them are:
+
+ 1. Create a private key (_localCA.key_) to sign the Root CA certificate
+ 2. Generate a Root CA certificate (_localCA.pem_) signed with the above key
+ 3. Create a "site" private key (_erised.key_)
+ 4. Generate an intermediate Certificate Signing Request certificate (_erised.csr_) signed with site's private key
+ 5. Create an X.509 V3 certificate extension config file (_erised.ext_) to link the final certificate to _localhost_ 
+ 6. Generate the site's final certificate (_erised.crt_) using the Root CA certificate, the CA private key, the intermediate CSR certificate, and the certificate extension config file
+
+Please note that neither of the private keys are password protected. This is definitely not something that you would normally do, but decided to simplify the process in case you'd want to tinker with the provided certs.
+
 # Known Issues
-**erised** may be full of bugs. Poeple "_... have wasted away before it, not knowing if what they have seen is real, or even possible..._" so, use it with caution for it gives no knowledge or truth.
+_erised_ may be full of bugs. Poeple "_... have wasted away before it, not knowing if what they have seen is real, or even possible..._" so, use it with caution for it gives no knowledge or truth.
 
 Of all of its deficiencies, the most notable is:
-* Using the _-path_ option could lead to significant security risks. When the _X-Erised-Response-File_ header is set it will search recursively for a matching filename in the current directory or **all** subdirectories underneath, returning the contents of the first match. For security reasons, path is restricted to the directory or subdirectories where the program was invoked.
-* https protocol is not yet supported
+* Using the _-path_ option could lead to significant security risks. When the _X-Erised-Response-File_ header is set, it will search recursively for a matching filename in the current directory or **all** subdirectories underneath it, returning the contents of the first match. For security reasons, path is restricted to the directory or subdirectories where the program was invoked.
 
-I may or may not address these issues in a future release. Caveat Emptor
+I may or may not address this or any other issues in a future release. [**Caveat Emptor**](./LICENSE)
 
 # Motivation
 When developing and testing REST API clients, sooner or later I'd come across situations where I needed a quick and easy way to dynamically test endpoint's responses under different scenarios. Although there are many excellent frameworks and mock servers available, the time and effort required to configure them is sometimes not justified, specially if the application under test exposes many routes, so after some brief and unsuccessful googling I decided to create my own.
 
-**erised** was inspired by [Kenneth Reitz's](https://kennethreitz.org/) HTTP Request & Response Service [httpbin.io](https://httpbin.org/) and it may offer similar functionality in future releases.
+_erised_ was partially inspired by [Kenneth Reitz's](https://kennethreitz.org/) HTTP Request & Response Service [httpbin.io](https://httpbin.org/) and later on by Marchandise Rudy's [Echo-Server](https://github.com/Ealenn/Echo-Server).
 
 The typical use case is to get a response to an arbitrary http request when your ability to control the server's behaviour is limited or non-existent.
 
-Imagine you're developing some client for [api.chucknorris.io](https://api.chucknorris.io/) and want to test the **/jokes/random** path. You could certainly make live calls against the server:
+Imagine you're developing some client for [api.chucknorris.io](https://api.chucknorris.io/) and want to test the _/jokes/random_ path. You could certainly make live calls against the server:
 ```sh
 curl -w '\n' -v -k https://api.chucknorris.io/jokes/random
 ```
@@ -167,7 +200,7 @@ curl -w '\n' -v -k https://api.chucknorris.io/jokes/random
 * Closing connection 0
 ```
 
-**Or**, even better yet, you could use **erised** like this:
+**Or**, even better yet, you could use _erised_ like this:
 ```sh
 curl -w '\n' -v \
 -H "X-Erised-Status-Code:OK" \
