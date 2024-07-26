@@ -124,8 +124,12 @@ func main() {
 
 	select {
 	case <-srv.ctx.Done():
-		if err = srv.cfg.Shutdown(srv.ctx); !errors.Is(err, context.Canceled) && *useTLS {
-			log.Error().Msg("Context shutdown error: " + err.Error())
+		if err = srv.cfg.Shutdown(srv.ctx); !errors.Is(err, context.Canceled) {
+			if err.Error() != "" {
+				log.Error().Msg("Context shutdown error: " + err.Error())
+			} else {
+				log.Error().Msg("Context shutdown error: unknown reason")
+			}
 		}
 	}
 
