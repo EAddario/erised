@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"flag"
 	"github.com/rs/zerolog"
@@ -32,7 +33,7 @@ func main() {
 	profile := flag.String("profile", "", "profile this session. A valid file name is required")
 	readTimeout := flag.Int("read", 5, "maximum duration in seconds for reading the entire request")
 	searchPath := flag.String("path", "", "path to search recursively for X-Erised-Response-File")
-	useTLS := flag.Bool("https", false, "use HTTPS instead of HTTP. A valid certificate and key are required")
+	useTLS := flag.Bool("https", false, "use HTTPS instead of HTTP. A valid X.509 certificate and private key are required")
 	writeTimeout := flag.Int("write", 10, "maximum duration in seconds before timing out response writes")
 	setupFlags(flag.CommandLine)
 	flag.Parse()
@@ -104,7 +105,7 @@ func main() {
 	go func() {
 		if *useTLS {
 			if err = srv.cfg.ListenAndServeTLS(*certFile, *keyFile); !errors.Is(err, http.ErrServerClosed) {
-				log.Error().Msg(err.Error())
+				log.Error().Msg("Server shutdown error: " + err.Error())
 				if err = syscall.Kill(syscall.Getpid(), syscall.SIGINT); err != nil {
 					log.Fatal().Msg(err.Error())
 					os.Exit(1)
@@ -112,7 +113,7 @@ func main() {
 			}
 		} else {
 			if err = srv.cfg.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
-				log.Error().Msg(err.Error())
+				log.Error().Msg("Server shutdown error: " + err.Error())
 				if err = syscall.Kill(syscall.Getpid(), syscall.SIGINT); err != nil {
 					log.Fatal().Msg(err.Error())
 					os.Exit(1)
@@ -123,14 +124,14 @@ func main() {
 
 	select {
 	case <-srv.ctx.Done():
-		if err = srv.cfg.Shutdown(srv.ctx); err != nil {
-			log.Error().Msg(err.Error())
+		if err = srv.cfg.Shutdown(srv.ctx); !errors.Is(err, context.Canceled) && *useTLS {
+			log.Error().Msg("Context shutdown error: " + err.Error())
 		}
 	}
 
 	log.Debug().Msg("leaving main")
 
 	defer func() {
-		log.Info().Msg("erised server shutting down")
+		log.Info().Msg("erised server terminated")
 	}()
 }
