@@ -15,7 +15,7 @@ import (
 	"time"
 )
 
-const version = "v0.10.3"
+const version = "v0.11.2"
 
 func main() {
 	defer elapsedTime(time.Now(), "Erised Server")
@@ -23,7 +23,7 @@ func main() {
 
 	var dir string
 	var err error
-	certFile := flag.String("cert", "", "path to a valid certificate file")
+	certFile := flag.String("cert", "", "path to a valid X.509 certificate file")
 	idleTimeout := flag.Int("idle", 120, "maximum time in seconds to wait for the next request when keep-alive is enabled")
 	jsonLog := flag.Bool("json", false, "use JSON log format")
 	keyFile := flag.String("key", "", "path to a valid private key file")
