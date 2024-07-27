@@ -104,7 +104,7 @@ func main() {
 
 	go func() {
 		if *useTLS {
-			if err = srv.cfg.ListenAndServeTLS(*certFile, *keyFile); !errors.Is(err, http.ErrServerClosed) {
+			if err = srv.cfg.ListenAndServeTLS(*certFile, *keyFile); err != nil && !errors.Is(err, http.ErrServerClosed) {
 				log.Error().Msg("Server shutdown error: " + err.Error())
 				if err = syscall.Kill(syscall.Getpid(), syscall.SIGINT); err != nil {
 					log.Fatal().Msg(err.Error())
@@ -112,7 +112,7 @@ func main() {
 				}
 			}
 		} else {
-			if err = srv.cfg.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
+			if err = srv.cfg.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 				log.Error().Msg("Server shutdown error: " + err.Error())
 				if err = syscall.Kill(syscall.Getpid(), syscall.SIGINT); err != nil {
 					log.Fatal().Msg(err.Error())
@@ -124,12 +124,9 @@ func main() {
 
 	select {
 	case <-srv.ctx.Done():
-		if err = srv.cfg.Shutdown(srv.ctx); !errors.Is(err, context.Canceled) {
-			if err.Error() != "" {
-				log.Error().Msg("Context shutdown error: " + err.Error())
-			} else {
-				log.Error().Msg("Context shutdown error: unknown reason")
-			}
+		if err = srv.cfg.Shutdown(srv.ctx); err != nil && !errors.Is(err, context.Canceled) {
+			log.Fatal().Msg("Context shutdown error: " + err.Error())
+			os.Exit(1)
 		}
 	}
 
