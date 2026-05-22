@@ -11,6 +11,7 @@ import (
 	"os/signal"
 	"path/filepath"
 	"runtime/pprof"
+	"runtime/trace"
 	"strings"
 	"syscall"
 	"time"
@@ -22,19 +23,19 @@ func main() {
 	defer elapsedTime(time.Now(), "Erised Server")
 	log.Debug().Msg("entering main")
 
-	var dir string
-	var err error
 	certFile := flag.String("cert", "", "path to a valid X.509 certificate file")
 	idleTimeout := flag.Int("idle", 120, "maximum time in seconds to wait for the next request when keep-alive is enabled")
 	jsonLog := flag.Bool("json", false, "use JSON log format")
 	keyFile := flag.String("key", "", "path to a valid private key file")
 	logLevel := flag.String("level", "info", "one of debug/info/warn/error/off")
 	port := flag.Int("port", 0, "port to listen. Default is 8080 for HTTP and 8443 for HTTPS")
-	profile := flag.String("profile", "", "profile this session. A valid file name is required")
+	prf := flag.String("profile", "", "profile this session. A valid file name is required")
+	trc := flag.String("trace", "", "trace this session. A valid file name is required")
 	readTimeout := flag.Int("read", 5, "maximum duration in seconds for reading the entire request")
 	searchPath := flag.String("path", "", "path to search recursively for X-Erised-Response-File")
 	useTLS := flag.Bool("https", false, "use HTTPS instead of HTTP. A valid X.509 certificate and private key are required")
 	writeTimeout := flag.Int("write", 10, "maximum duration in seconds before timing out response writes")
+
 	setupFlags(flag.CommandLine)
 	flag.Parse()
 
@@ -44,20 +45,35 @@ func main() {
 		*port = 8443
 	}
 
+	var dir string
+	var err error
 	if dir, err = os.Getwd(); err != nil {
 		log.Fatal().Msg("Unable to get current directory. Program will terminate.")
 		log.Fatal().Msg(err.Error())
-		os.Exit(1)
 	}
 
-	if *profile != "" {
-		if f, err := os.Create(*profile + ".prof"); err == nil {
+	if *prf != "" {
+		if f, err := os.Create(*prf + ".prf"); err == nil {
 			if err = pprof.StartCPUProfile(f); err != nil {
 				log.Fatal().Msg("Cannot enable profiling. Program will terminate.")
 				log.Fatal().Msg(err.Error())
 				os.Exit(1)
 			} else {
 				defer pprof.StopCPUProfile()
+			}
+		} else {
+			log.Error().Msg("Unable to create profiling file: " + err.Error())
+			log.Error().Msg("Profiling will be disabled")
+		}
+	}
+
+	if *trc != "" {
+		if f, err := os.Create(*trc + ".trc"); err == nil {
+			if err = trace.Start(f); err != nil {
+				log.Fatal().Msg("Cannot enable tracing. Program will terminate.")
+				log.Fatal().Msg(err.Error())
+			} else {
+				defer trace.Stop()
 			}
 		} else {
 			log.Error().Msg("Unable to create profiling file: " + err.Error())
@@ -90,7 +106,6 @@ func main() {
 
 	if *useTLS && (*certFile == "" || *keyFile == "") {
 		log.Fatal().Msg("HTTPS requires a valid certificate and key file")
-		os.Exit(1)
 	}
 
 	srv := newServer(*port, *readTimeout, *writeTimeout, *idleTimeout, *searchPath)
@@ -108,7 +123,6 @@ func main() {
 				log.Error().Msg("Server shutdown error: " + err.Error())
 				if err = syscall.Kill(syscall.Getpid(), syscall.SIGINT); err != nil {
 					log.Fatal().Msg(err.Error())
-					os.Exit(1)
 				}
 			}
 		} else {
@@ -116,7 +130,6 @@ func main() {
 				log.Error().Msg("Server shutdown error: " + err.Error())
 				if err = syscall.Kill(syscall.Getpid(), syscall.SIGINT); err != nil {
 					log.Fatal().Msg(err.Error())
-					os.Exit(1)
 				}
 			}
 		}
@@ -126,13 +139,9 @@ func main() {
 	case <-srv.ctx.Done():
 		if err = srv.cfg.Shutdown(srv.ctx); err != nil && !errors.Is(err, context.Canceled) {
 			log.Fatal().Msg("Context shutdown error: " + err.Error())
-			os.Exit(1)
 		}
 	}
 
 	log.Debug().Msg("leaving main")
-
-	defer func() {
-		log.Info().Msg("erised server terminated")
-	}()
+	log.Info().Msg("erised server terminated")
 }

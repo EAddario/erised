@@ -19,13 +19,13 @@ import (
 
 func (srv *server) routes() {
 	log.Debug().Msg("entering routes")
-	go srv.mux.HandleFunc("/", srv.handleLanding())
-	go srv.mux.HandleFunc("/erised/headers", srv.handleHeaders())
-	go srv.mux.HandleFunc("/erised/info", srv.handleInfo())
-	go srv.mux.HandleFunc("/erised/ip", srv.handleIP())
-	go srv.mux.HandleFunc("/erised/shutdown", srv.handleShutdown())
-	go srv.mux.HandleFunc("/erised/echoserver", srv.handleEchoServer())
-	go srv.mux.HandleFunc("/erised/echoserver/{path...}", srv.handleEchoServer())
+	srv.mux.HandleFunc("/", srv.handleLanding())
+	srv.mux.HandleFunc("/erised/headers", srv.handleHeaders())
+	srv.mux.HandleFunc("/erised/info", srv.handleInfo())
+	srv.mux.HandleFunc("/erised/ip", srv.handleIP())
+	srv.mux.HandleFunc("/erised/shutdown", srv.handleShutdown())
+	srv.mux.HandleFunc("/erised/echoserver", srv.handleEchoServer())
+	srv.mux.HandleFunc("/erised/echoserver/{path...}", srv.handleEchoServer())
 	log.Debug().Msg("leaving routes")
 }
 
