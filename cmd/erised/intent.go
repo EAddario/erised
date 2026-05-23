@@ -5,8 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"strconv"
-	"time"
 )
 
 var (
@@ -20,9 +18,7 @@ type FileResolver func(filename string) ([]byte, error)
 type ErisedIntent struct {
 	StatusCode int
 	Headers    map[string]string
-	Encoding   int
 	Data       string
-	Delay      time.Duration
 }
 
 func BuildErisedIntent(reqHeaders http.Header, resolveFile FileResolver) ErisedIntent {
@@ -32,16 +28,10 @@ func BuildErisedIntent(reqHeaders http.Header, resolveFile FileResolver) ErisedI
 
 	// Content Type
 	xContentType := reqHeaders.Get("X-Erised-Content-Type")
-	encoding, mime, contentEncoding := getMimeType(xContentType)
-	intent.Encoding = encoding
+	mime, contentEncoding := getMimeType(xContentType)
 	intent.Headers["Content-Type"] = mime
-	if xContentType == "gzip" {
+	if contentEncoding != "" {
 		intent.Headers["Content-Encoding"] = contentEncoding
-	}
-
-	// Delay
-	if xrd, err := strconv.Atoi(reqHeaders.Get("X-Erised-Response-Delay")); xrd > 0 && err == nil {
-		intent.Delay = time.Duration(xrd) * time.Millisecond
 	}
 
 	// Custom Headers
@@ -154,17 +144,17 @@ func getHttpStatusCode(code string) int {
 	}
 }
 
-func getMimeType(code string) (int, string, string) {
+func getMimeType(code string) (string, string) {
 	switch code {
 	case "json":
-		return encodingJSON, "application/json", ""
+		return "application/json", ""
 	case "xml":
-		return encodingXML, "application/xml", ""
+		return "application/xml", ""
 	case "gzip":
-		return encodingGZIP, "application/octet-stream", "gzip"
+		return "application/octet-stream", "gzip"
 	case "html":
-		return encodingHTML, "text/html", ""
+		return "text/html", ""
 	default:
-		return encodingTEXT, "text/plain", ""
+		return "text/plain", ""
 	}
 }

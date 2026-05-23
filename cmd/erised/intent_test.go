@@ -3,7 +3,6 @@ package main
 import (
 	"net/http"
 	"testing"
-	"time"
 )
 
 func TestBuildErisedIntent(t *testing.T) {
@@ -15,9 +14,6 @@ func TestBuildErisedIntent(t *testing.T) {
 
 		intent := BuildErisedIntent(headers, nil)
 
-		if intent.Encoding != encodingJSON {
-			t.Errorf("expected encoding %v, got %v", encodingJSON, intent.Encoding)
-		}
 		if intent.Headers["Content-Type"] != "application/json" {
 			t.Errorf("expected json content type, got %v", intent.Headers["Content-Type"])
 		}
@@ -37,17 +33,6 @@ func TestBuildErisedIntent(t *testing.T) {
 
 		if intent.StatusCode != 404 {
 			t.Errorf("expected status code 404, got %v", intent.StatusCode)
-		}
-	})
-
-	t.Run("response delay", func(t *testing.T) {
-		headers := http.Header{}
-		headers.Set("X-Erised-Response-Delay", "500")
-
-		intent := BuildErisedIntent(headers, nil)
-
-		if intent.Delay != 500*time.Millisecond {
-			t.Errorf("expected 500ms delay, got %v", intent.Delay)
 		}
 	})
 

@@ -46,8 +46,8 @@ The catch-all `/` handler processing all `X-Erised-*` headers for arbitrary path
 - Every request to **Landing Handler** may carry any combination of **Erised Response Headers**
 - An **Erised Response File** supersedes **Erised Data** when both are present
 - An **Erised Location** only takes effect when **Erised Status Code** is a redirect (30x)
-- An **Erised Response Delay** pauses all response processing for the specified duration
-- The **Echo Server** ignores `X-Erised-*` headers entirely — it always returns its own HTML page
+- An **Erised Response Delay** pauses all response processing for the specified duration and applies to all routes (including the **Echo Server**)
+- The **Echo Server** ignores most `X-Erised-*` headers and returns its own HTML page, but will honor **Erised Response Delay** and `X-Erised-Content-Type: gzip`.
 
 ## Built-in routes
 

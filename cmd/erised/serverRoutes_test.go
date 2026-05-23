@@ -191,10 +191,12 @@ func TestErisedLandingRoute(t *testing.T) {
 	svr := server{pth: path}
 
 	g.Describe("Test /", func() {
+		handler := WithDelay(WithGzip(svr.handleLanding()))
+
 		g.It("Should return StatusOK", func() {
 			res := httptest.NewRecorder()
 			req := httptest.NewRequest(http.MethodGet, "http://localhost:8080/", nil)
-			svr.handleLanding().ServeHTTP(res, req)
+			handler.ServeHTTP(res, req)
 
 			Ω(res).Should(HaveHTTPStatus(http.StatusOK))
 			Ω(res.Body.String()).Should(BeEmpty())
@@ -205,7 +207,7 @@ func TestErisedLandingRoute(t *testing.T) {
 			req := httptest.NewRequest(http.MethodGet, "http://localhost:8080/", nil)
 			req.Header.Set("X-Erised-Status-Code", "TemporaryRedirect")
 			req.Header.Set("X-Erised-Location", "https://www.example.com")
-			svr.handleLanding().ServeHTTP(res, req)
+			handler.ServeHTTP(res, req)
 
 			Ω(res).Should(HaveHTTPStatus(http.StatusTemporaryRedirect))
 			Ω(res.Header().Get("Location")).Should(Equal("https://www.example.com"))
@@ -217,7 +219,7 @@ func TestErisedLandingRoute(t *testing.T) {
 			req := httptest.NewRequest(http.MethodGet, "http://localhost:8080/", nil)
 			req.Header.Set("X-Erised-Content-Type", "json")
 			req.Header.Set("X-Erised-Data", exp)
-			svr.handleLanding().ServeHTTP(res, req)
+			handler.ServeHTTP(res, req)
 
 			Ω(res).Should(HaveHTTPStatus(http.StatusOK))
 			Ω(res.Header().Get("Content-Type")).Should(Equal("application/json"))
@@ -230,7 +232,7 @@ func TestErisedLandingRoute(t *testing.T) {
 			req := httptest.NewRequest(http.MethodGet, "http://localhost:8080/", nil)
 			req.Header.Set("X-Erised-Content-Type", "text")
 			req.Header.Set("X-Erised-Data", exp)
-			svr.handleLanding().ServeHTTP(res, req)
+			handler.ServeHTTP(res, req)
 
 			Ω(res).Should(HaveHTTPStatus(http.StatusOK))
 			Ω(res.Header().Get("Content-Type")).Should(Equal("text/plain"))
@@ -243,7 +245,7 @@ func TestErisedLandingRoute(t *testing.T) {
 			req := httptest.NewRequest(http.MethodGet, "http://localhost:8080/", nil)
 			req.Header.Set("X-Erised-Content-Type", "xml")
 			req.Header.Set("X-Erised-Data", exp)
-			svr.handleLanding().ServeHTTP(res, req)
+			handler.ServeHTTP(res, req)
 
 			Ω(res).Should(HaveHTTPStatus(http.StatusOK))
 			Ω(res.Header().Get("Content-Type")).Should(Equal("application/xml"))
@@ -258,7 +260,7 @@ func TestErisedLandingRoute(t *testing.T) {
 			req := httptest.NewRequest(http.MethodGet, "http://localhost:8080/", nil)
 			req.Header.Set("X-Erised-Content-Type", "gzip")
 			req.Header.Set("X-Erised-Data", exp)
-			svr.handleLanding().ServeHTTP(res, req)
+			handler.ServeHTTP(res, req)
 
 			Ω(res).Should(HaveHTTPStatus(http.StatusOK))
 			Ω(res.Header().Get("Content-Type")).Should(Equal("application/octet-stream"))
@@ -271,7 +273,7 @@ func TestErisedLandingRoute(t *testing.T) {
 			res := httptest.NewRecorder()
 			req := httptest.NewRequest(http.MethodGet, "http://localhost:8080/", nil)
 			req.Header.Set("X-Erised-Headers", exp)
-			svr.handleLanding().ServeHTTP(res, req)
+			handler.ServeHTTP(res, req)
 
 			Ω(res).Should(HaveHTTPStatus(http.StatusOK))
 			Ω(res.Header().Get("X-Headers-One")).Should(Equal("I'm header one"))
@@ -284,7 +286,7 @@ func TestErisedLandingRoute(t *testing.T) {
 			req := httptest.NewRequest(http.MethodGet, "http://localhost:8080/", nil)
 			req.Header.Set("X-Erised-Content-Type", "json")
 			req.Header.Set("X-Erised-Response-File", "serverRoutes_test.json")
-			svr.handleLanding().ServeHTTP(res, req)
+			handler.ServeHTTP(res, req)
 
 			Ω(res).Should(HaveHTTPStatus(http.StatusOK))
 			Ω(res.Header().Get("Content-Type")).Should(Equal("application/json"))
@@ -296,7 +298,7 @@ func TestErisedLandingRoute(t *testing.T) {
 			req := httptest.NewRequest(http.MethodGet, "http://localhost:8080/", nil)
 			req.Header.Set("X-Erised-Content-Type", "json")
 			req.Header.Set("X-Erised-Response-File", "|file/:/cannot/:/exist|")
-			svr.handleLanding().ServeHTTP(res, req)
+			handler.ServeHTTP(res, req)
 
 			Ω(res).Should(HaveHTTPStatus(http.StatusNotFound))
 			Ω(res.Header().Get("Content-Type")).Should(Equal("application/json"))
@@ -311,7 +313,7 @@ func TestErisedLandingRoute(t *testing.T) {
 			req.Header.Set("X-Erised-Headers", exp)
 			req.Header.Set("X-Erised-Location", "https://www.example.com")
 			req.Header.Set("X-Erised-Status-Code", "MovedPermanently")
-			svr.handleLanding().ServeHTTP(res, req)
+			handler.ServeHTTP(res, req)
 
 			Ω(res).Should(HaveHTTPStatus(http.StatusMovedPermanently))
 			Ω(res.Header().Get("Location")).Should(Equal("https://www.example.com"))
@@ -326,7 +328,7 @@ func TestErisedLandingRoute(t *testing.T) {
 			req.Header.Set("X-Erised-Response-Delay", "2000")
 
 			st := time.Now()
-			svr.handleLanding().ServeHTTP(res, req)
+			handler.ServeHTTP(res, req)
 			el := time.Since(st)
 
 			Ω(res).Should(HaveHTTPStatus(http.StatusOK))

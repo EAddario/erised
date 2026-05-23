@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
 	"sort"
@@ -15,13 +16,18 @@ import (
 
 func (srv *server) routes() {
 	log.Debug().Msg("entering routes")
-	srv.mux.HandleFunc("/", srv.handleLanding())
-	srv.mux.HandleFunc("/erised/headers", srv.handleHeaders())
-	srv.mux.HandleFunc("/erised/info", srv.handleInfo())
-	srv.mux.HandleFunc("/erised/ip", srv.handleIP())
-	srv.mux.HandleFunc("/erised/shutdown", srv.handleShutdown())
-	srv.mux.HandleFunc("/erised/echoserver", srv.handleEchoServer())
-	srv.mux.HandleFunc("/erised/echoserver/{path...}", srv.handleEchoServer())
+	
+	wrap := func(h http.HandlerFunc) http.HandlerFunc {
+		return WithDelay(WithGzip(h))
+	}
+
+	srv.mux.HandleFunc("/", wrap(srv.handleLanding()))
+	srv.mux.HandleFunc("/erised/headers", wrap(srv.handleHeaders()))
+	srv.mux.HandleFunc("/erised/info", wrap(srv.handleInfo()))
+	srv.mux.HandleFunc("/erised/ip", wrap(srv.handleIP()))
+	srv.mux.HandleFunc("/erised/shutdown", wrap(srv.handleShutdown()))
+	srv.mux.HandleFunc("/erised/echoserver", wrap(srv.handleEchoServer()))
+	srv.mux.HandleFunc("/erised/echoserver/{path...}", wrap(srv.handleEchoServer()))
 	log.Debug().Msg("leaving routes")
 }
 
@@ -46,7 +52,9 @@ func (srv *server) handleLanding() http.HandlerFunc {
 		}
 
 		res.WriteHeader(intent.StatusCode)
-		srv.respond(res, intent.Encoding, intent.Delay, intent.Data)
+		if intent.Data != "" {
+			_, _ = io.WriteString(res, intent.Data)
+		}
 		log.Debug().Msg("leaving handleLanding")
 	}
 }
@@ -86,7 +94,7 @@ func (srv *server) handleHeaders() http.HandlerFunc {
 
 		data += "\"Host\":\"" + req.Host + "\""
 		data += "}"
-		srv.respond(res, encodingJSON, 0, data)
+		_, _ = io.WriteString(res, data)
 		log.Debug().Msg("leaving handleHeaders")
 	}
 }
@@ -116,7 +124,7 @@ func (srv *server) handleInfo() http.HandlerFunc {
 		data += "\"Protocol\":\"" + req.Proto + "\","
 		data += "\"Request URI\":\"" + req.RequestURI + "\""
 		data += "}"
-		srv.respond(res, encodingJSON, 0, data)
+		_, _ = io.WriteString(res, data)
 		log.Debug().Msg("leaving handleInfo")
 	}
 }
@@ -143,7 +151,7 @@ func (srv *server) handleIP() http.HandlerFunc {
 		data := "{"
 		data += "\"Client IP\":\"" + req.RemoteAddr + "\""
 		data += "}"
-		srv.respond(res, encodingJSON, 0, data)
+		_, _ = io.WriteString(res, data)
 		log.Debug().Msg("leaving handleIP")
 	}
 }
@@ -167,7 +175,7 @@ func (srv *server) handleShutdown() http.HandlerFunc {
 		}
 
 		res.Header().Set("Content-Type", "application/json")
-		srv.respond(res, encodingJSON, 0, "{\"shutdown\":\"ok\"}")
+		_, _ = io.WriteString(res, "{\"shutdown\":\"ok\"}")
 		log.Info().Msg("Initiating server shutdown")
 		srv.stp()
 		log.Debug().Msg("leaving handleShutdown")
@@ -256,7 +264,7 @@ func (srv *server) handleEchoServer() http.HandlerFunc {
 
 		data += "<br><hr><br><center><a href=\"https://github.com/EAddario/erised\">Erised (" + version + "): A nimble http server to test arbitrary REST API responses.</a></center>"
 		data += "</body></html>"
-		srv.respond(res, encodingHTML, 0, data)
+		_, _ = io.WriteString(res, data)
 		log.Debug().Msg("leaving handleEchoServer")
 	}
 }
