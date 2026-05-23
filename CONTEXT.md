@@ -32,6 +32,9 @@ The `X-Erised-Location` header value, set as the response `Location` header when
 **Erised Response Delay**:
 The `X-Erised-Response-Delay` header value in milliseconds, instructing the server to sleep before responding.
 
+**Erised Intent**:
+The structured, purely logical representation of the desired HTTP response, derived from parsing the **Erised Response Headers**.
+
 **Echo Server**:
 The `/erised/echoserver/*` route returning an HTML page displaying server environment variables, request headers, method, path, body, and timing.
 

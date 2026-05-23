@@ -10,7 +10,6 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
-	"strconv"
 	"strings"
 	"time"
 
@@ -41,90 +40,55 @@ func (srv *server) handleLanding() http.HandlerFunc {
 			Str("path", req.RequestURI).
 			Str("responseFileSearchPath", srv.pth).
 			Msg("handleLanding")
-		delay := time.Duration(0)
-		xContentType := req.Header.Get("X-Erised-Content-Type")
-		log.Debug().Msg("X-Erised-Content-Type: " + xContentType)
-		encoding, mime, contentEncoding := mimeType(xContentType)
-		res.Header().Set("Content-Type", mime)
 
-		if xContentType == "gzip" {
-			res.Header().Set("Content-Encoding", contentEncoding)
-		}
+		var resolver FileResolver
+		if srv.pth != "" {
+			resolver = func(filename string) ([]byte, error) {
+				var fileData []byte
+				var walkErr error = ErrFileNotFound
+				stopWalk := errors.New("stop walk")
 
-		if xrd, err := strconv.Atoi(req.Header.Get("X-Erised-Response-Delay")); xrd > 0 && err == nil {
-			delay = time.Duration(xrd) * time.Millisecond
-			log.Debug().Msg("X-Erised-Response-Delay: " + delay.String())
-		}
-
-		xHeaders := req.Header.Get("X-Erised-Headers")
-		log.Debug().Msg("X-Erised-Headers: " + xHeaders)
-		var hdrs map[string]interface{}
-
-		if err := json.Unmarshal([]byte(xHeaders), &hdrs); err == nil {
-			if len(hdrs) != 0 {
-				for k, v := range hdrs {
-					res.Header().Set(k, fmt.Sprintf("%v", v))
-				}
-			}
-		}
-
-		xStatusCode := httpStatusCode(req.Header.Get("X-Erised-Status-Code"))
-		log.Debug().Msg("X-Erised-Status-Code: " + strconv.Itoa(xStatusCode))
-
-		if xStatusCode >= 300 && xStatusCode < 310 {
-			xloc := req.Header.Get("X-Erised-Location")
-			res.Header().Set("Location", xloc)
-			log.Debug().Msg("X-Erised-Location: " + xloc)
-		}
-
-		xData := ""
-
-		if xResponseFile := req.Header.Get("X-Erised-Response-File"); xResponseFile != "" && srv.pth != "" {
-			log.Debug().Msg("X-Erised-Response-File: " + xResponseFile)
-			xStatusCode = http.StatusNotFound
-
-			err := filepath.WalkDir(srv.pth, func(path string, entry fs.DirEntry, err error) error {
-
-				if err != nil {
-					log.Error().Msg("Invalid path: " + path)
-					log.Debug().Msg(fmt.Sprintf("Error: %v", err))
-
-					return errors.New("INVALID_PATH_ERROR")
-				}
-
-				if !entry.IsDir() && filepath.Base(path) == xResponseFile {
-					if ct, err := os.ReadFile(path); err != nil {
-						log.Error().Msg("Unable to open the file: " + path)
+				_ = filepath.WalkDir(srv.pth, func(path string, entry fs.DirEntry, err error) error {
+					if err != nil {
+						log.Error().Msg("Invalid path: " + path)
 						log.Debug().Msg(fmt.Sprintf("Error: %v", err))
-
-						return errors.New("FILE_ACCESS_ERROR")
-					} else {
-						log.Info().Msg(fmt.Sprintf("Reading file %v", path))
-						xData = string(ct)
-
-						return errors.New("FILE_FOUND")
+						walkErr = ErrInvalidPath
+						return stopWalk
 					}
+
+					if !entry.IsDir() && filepath.Base(path) == filename {
+						if ct, err := os.ReadFile(path); err != nil {
+							log.Error().Msg("Unable to open the file: " + path)
+							log.Debug().Msg(fmt.Sprintf("Error: %v", err))
+							walkErr = ErrFileAccess
+							return stopWalk
+						} else {
+							log.Info().Msg(fmt.Sprintf("Reading file %v", path))
+							fileData = ct
+							walkErr = nil
+							return stopWalk
+						}
+					}
+
+					log.Debug().Msg("File " + filename + " not found in " + path)
+					return nil
+				})
+
+				if walkErr != nil {
+					return nil, walkErr
 				}
-
-				log.Debug().Msg("File " + xResponseFile + " not found in " + path)
-				return nil
-			})
-
-			switch fmt.Sprintf("%v", err) {
-			case "INVALID_PATH_ERROR":
-				xStatusCode = http.StatusBadRequest
-			case "FILE_ACCESS_ERROR":
-				xStatusCode = http.StatusInternalServerError
-			case "FILE_FOUND":
-				xStatusCode = http.StatusOK
+				return fileData, nil
 			}
-		} else {
-			xData = req.Header.Get("X-Erised-Data")
-			log.Debug().Msg("X-Erised-Data: " + xData)
 		}
 
-		res.WriteHeader(xStatusCode)
-		srv.respond(res, encoding, delay, xData)
+		intent := BuildErisedIntent(req.Header, resolver)
+
+		for k, v := range intent.Headers {
+			res.Header().Set(k, v)
+		}
+
+		res.WriteHeader(intent.StatusCode)
+		srv.respond(res, intent.Encoding, intent.Delay, intent.Data)
 		log.Debug().Msg("leaving handleLanding")
 	}
 }
