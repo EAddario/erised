@@ -3,12 +3,9 @@ package main
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
-	"io/fs"
 	"net/http"
 	"os"
-	"path/filepath"
 	"sort"
 	"strings"
 	"time"
@@ -41,46 +38,7 @@ func (srv *server) handleLanding() http.HandlerFunc {
 			Str("responseFileSearchPath", srv.pth).
 			Msg("handleLanding")
 
-		var resolver FileResolver
-		if srv.pth != "" {
-			resolver = func(filename string) ([]byte, error) {
-				var fileData []byte
-				var walkErr error = ErrFileNotFound
-				stopWalk := errors.New("stop walk")
-
-				_ = filepath.WalkDir(srv.pth, func(path string, entry fs.DirEntry, err error) error {
-					if err != nil {
-						log.Error().Msg("Invalid path: " + path)
-						log.Debug().Msg(fmt.Sprintf("Error: %v", err))
-						walkErr = ErrInvalidPath
-						return stopWalk
-					}
-
-					if !entry.IsDir() && filepath.Base(path) == filename {
-						if ct, err := os.ReadFile(path); err != nil {
-							log.Error().Msg("Unable to open the file: " + path)
-							log.Debug().Msg(fmt.Sprintf("Error: %v", err))
-							walkErr = ErrFileAccess
-							return stopWalk
-						} else {
-							log.Info().Msg(fmt.Sprintf("Reading file %v", path))
-							fileData = ct
-							walkErr = nil
-							return stopWalk
-						}
-					}
-
-					log.Debug().Msg("File " + filename + " not found in " + path)
-					return nil
-				})
-
-				if walkErr != nil {
-					return nil, walkErr
-				}
-				return fileData, nil
-			}
-		}
-
+		resolver := NewLocalFileResolver(srv.pth)
 		intent := BuildErisedIntent(req.Header, resolver)
 
 		for k, v := range intent.Headers {
