@@ -4,8 +4,6 @@ import (
 	"context"
 	"errors"
 	"flag"
-	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
 	"net/http"
 	"os"
 	"os/signal"
@@ -15,9 +13,12 @@ import (
 	"strings"
 	"syscall"
 	"time"
+
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 )
 
-const version = "v0.11.2"
+const version = "v0.23.3"
 
 func main() {
 	defer elapsedTime(time.Now(), "Erised Server")
